@@ -1,6 +1,7 @@
-# runs the C++ and JavaScript versions and requires identical output
-execute_process(COMMAND ${CLI} foundations ${SEED} OUTPUT_FILE ${OUT}.cpp.txt RESULT_VARIABLE cpp_result)
-execute_process(COMMAND ${NODE} ${SCRIPT} ${SEED} OUTPUT_FILE ${OUT}.js.txt RESULT_VARIABLE js_result)
+# runs the C++ and JavaScript versions with the same arguments and requires identical output
+separate_arguments(args UNIX_COMMAND "${ARGS}")
+execute_process(COMMAND ${CLI} ${COMMAND} ${args} OUTPUT_FILE ${OUT}.cpp.txt RESULT_VARIABLE cpp_result)
+execute_process(COMMAND ${NODE} ${SCRIPT} ${args} OUTPUT_FILE ${OUT}.js.txt RESULT_VARIABLE js_result)
 if(NOT cpp_result EQUAL 0 OR NOT js_result EQUAL 0)
     message(FATAL_ERROR "run failed: C++ ${cpp_result}, JavaScript ${js_result}")
 endif()

@@ -58,9 +58,9 @@ Size: S fits a short session, M a normal one, L should be split if tokens are lo
       JS: WorldEnvironment, Random, Hyperparameters. Done: baseline numbers saved.
 - [x] **1. Foundations (S)**: RNG, grid, cell enum, directions, neighbours, hyperparameters struct.
       JS: Grid/, CellStates, Directions, Random. Done: unit tests; RNG matches JS.
-- [ ] **2. Life cycle (L)**: organism pool, anatomy, mouth, producer, mover, eating, movement, rotation, reproduction, death, species counts.
-      JS: Organism, Anatomy, BodyCell, RandomOrganismGenerator. Done: parity with mutation set to 0.
-- [ ] **3. Original behaviour (M)**: killer, armor, eye, brain, all mutation.
+- [x] **2. Life cycle (L)**: organism pool, anatomy, mouth, producer, mover, eating, movement, rotation, reproduction, death, species counts.
+      JS: Organism, Anatomy, BodyCell. Done: parity with mutation off, and with mouth, producer and mover mutating.
+- [ ] **3. Original behaviour (M)**: killer, armor, eye, brain (including brain mutation), random organism generator.
       Mutation can pick any of the 13 types, so parity here restricts the type list to implemented ones in both programs.
 - [ ] **4. Added cells A (M)**: healer, scavenger, parasite, kamikaze, transporter, kin rule.
 - [ ] **5. Added cells B (S)**: drill and armor durability, regrower. Done: full-type parity.
@@ -97,3 +97,18 @@ No spaces around = + - * / in code.
 - Creating a species draws one random number (its name), including in OriginOfLife.
 - Keep organisms in update order. Newborns are first updated on the next tick (checked in Node). An organism killed after its turn stays in the list, and counts toward maxOrganisms, until the next tick removes it.
 - Food age tracking (Part 6) needs insertion order; it is not in the grid yet.
+
+### Part 2
+- `le_cli run` takes the same options as `run.js` and prints the same lines, which now include the living species count. It rejects cell types and settings that are not ported.
+- Core: `organism` (BodyCell, Anatomy, Organism), `species`, `world` (tick, add, reset), `life.cpp` (update, reproduce, mutate, die, move, rotate), `behaviours.cpp` (mouth, producer).
+- Organisms sit in a `std::deque` pool with a free list. The grid owner id is the pool slot. A slot is reused only after its dead organism is removed.
+- Living organisms are always inside the grid, so behaviours skip bounds checks. Save loading and later parts (cells breaking off the centre) must keep this true.
+- 12 tests pass in release and debug (sanitizers). Speed: see `docs/baseline.md`.
+
+### Notes for Part 3
+- Add each new type to `kPorted` in `src/cli/run.cpp`, new settings to `set()`, and parity cases to `tests/CMakeLists.txt`.
+- Hooks are marked "Part 3" in `life.cpp`: brain decision before moving, and the brain mutation branch. The JavaScript calls `brain.mutate()` there only for organisms with eyes.
+- `addRandomizedCell` calls `brain.randomizeDecisions()` before adding the first eye. `Anatomy::addRandomized` only draws the eye direction, so the brain draw must come first.
+- Offspring copy the brain only if the parent is a mover with eyes.
+- Cells can break off from Part 5 on: the cell loop in `World::update` and the grid's cell index then need care.
+- `World::spawn` is for tests and the editor. The generator needs the brain, so it belongs to this part.

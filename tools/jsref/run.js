@@ -54,6 +54,7 @@ for(const pair of options.set){
 
 const Random=load('Utils/Random');
 const WorldEnvironment=load('Environments/WorldEnvironment');
+const FossilRecord=load('Stats/FossilRecord');
 
 Random.setSeed(options.seed);
 let draws=0;
@@ -66,7 +67,8 @@ env.resizeGridColRow(1,options.cols,options.rows);
 Random.run(()=>env.OriginOfLife());
 
 const report=()=>console.log(
-    `tick ${env.total_ticks} orgs ${env.organisms.length} grid ${gridHash(env.grid_map)} life ${organismHash(env)} draws ${draws}`);
+    `tick ${env.total_ticks} orgs ${env.organisms.length} grid ${gridHash(env.grid_map)} life ${organismHash(env)} `+
+    `species ${Object.keys(FossilRecord.extant_species).length} draws ${draws}`);
 
 if(!options.bench)
     report();

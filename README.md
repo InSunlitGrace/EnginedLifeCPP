@@ -10,4 +10,6 @@ Licensed under GPL-3.0, see LICENSE.
     cmake --build --preset release
     ctest --preset release
 
+Headless run: `build/release/src/cli/le_cli run --types mouth,producer,mover --ticks 3000`
+
 Node is only needed for the tests that compare against the JavaScript. See PORT_PLAN.md for progress.
