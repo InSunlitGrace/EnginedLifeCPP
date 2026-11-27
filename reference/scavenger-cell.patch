@@ -1,0 +1,199 @@
+diff --git a/dist/index.html b/dist/index.html
+index 22146a5..967badd 100644
+--- a/dist/index.html
++++ b/dist/index.html
+@@ -62,6 +62,7 @@
+ 							<div class='cell-legend-type' id='armor' title="Armor: Negates affects of killer cell."></div>
+ 							<div class='cell-legend-type' id='eye' title="Eye: Observes cells and decides movement."></div>
+ 							<div class='cell-legend-type' id='healer' title="Healer: Slowly repairs damage."></div>
++							<div class='cell-legend-type' id='scavenger' title="Scavenger: Sometimes eats food 2 squares away."></div>
+ 							<div class='cell-legend-type' id='food' title="Food: Not part of an organism. Once an organism has eaten enough food, it will reproduce."></div>
+ 							<div class='cell-legend-type' id='wall' title="Wall: Not part of an organism. Blocks movement and reproduction."></div>
+ 						</div><br>
+@@ -102,6 +103,7 @@
+ 								<div class='cell-type' id='armor' title="Armor: Negates affects of killer cell."></div>
+ 								<div class='cell-type' id='eye' title="Eye: Looks for cells to move away from or towards. Click again on a placed cell to rotate"></div>
+ 								<div class='cell-type' id='healer' title="Healer: Slowly repairs damage."></div>
++								<div class='cell-type' id='scavenger' title="Scavenger: Sometimes eats food 2 squares away."></div>
+ 							</div>
+ 
+ 							<button id='clear-editor'>Clear</button>
+@@ -154,6 +156,7 @@
+ 									<option value="armor">armor</option>
+ 									<option value="eye">eye</option>
+ 									<option value="healer">healer</option>
++									<option value="scavenger">scavenger</option>
+ 								</select>
+ 
+ 								<label for="reaction-edit">Reaction: </label>
+@@ -217,6 +220,9 @@
+ 						<label for="food-prod-prob" title='The probability that a producer cell will produce food each tick.'>Probability of producing food:</label>
+ 						<input type="number" id="food-prod-prob" min=".001" max="100" value=4 step="1">
+ 						<br>
++						<label for="scavenge-prob" title='Chance each tick that a scavenger cell eats food 2 squares away.'>Probability of scavenging food:</label>
++						<input type="number" id="scavenge-prob" min="0" max="100" value="10" step="any">
++						<br>
+ 						<label for="lifespan-multiplier" title='An organism lives for this many ticks per cell in its body.'>Lifespan multiplier:</label>
+ 						<input type="number" id="lifespan-multiplier" min="1" max="10000" value=100 step="1">
+ 						<br>
+diff --git a/src/Controllers/ControlPanel.js b/src/Controllers/ControlPanel.js
+index 8ba733a..7c8d687 100644
+--- a/src/Controllers/ControlPanel.js
++++ b/src/Controllers/ControlPanel.js
+@@ -266,6 +266,9 @@ class ControlPanel {
+         $('#food-prod-prob').change(function() {
+             Hyperparams.foodProdProb = $('#food-prod-prob').val();
+         }.bind(this));
++        $('#scavenge-prob').change(function() {
++            Hyperparams.scavengeProb=parseFloat($('#scavenge-prob').val());
++        });
+         $('#lifespan-multiplier').change(function() {
+             Hyperparams.lifespanMultiplier = $('#lifespan-multiplier').val();
+         }.bind(this));
+@@ -363,6 +366,7 @@ class ControlPanel {
+ 
+     updateHyperparamUIValues(){
+         $('#food-prod-prob').val(Hyperparams.foodProdProb);
++        $('#scavenge-prob').val(Hyperparams.scavengeProb);
+         $('#lifespan-multiplier').val(Hyperparams.lifespanMultiplier);
+         $('#rot-enabled').prop('checked', Hyperparams.rotationEnabled);
+         $('#insta-kill').prop('checked', Hyperparams.instaKill);
+diff --git a/src/Controllers/EditorController.js b/src/Controllers/EditorController.js
+index 9046efc..c445b5a 100644
+--- a/src/Controllers/EditorController.js
++++ b/src/Controllers/EditorController.js
+@@ -89,6 +89,9 @@ class EditorController extends CanvasController{
+                 case "healer":
+                     self.edit_cell_type=CellStates.healer;
+                     break;
++                case "scavenger":
++                    self.edit_cell_type=CellStates.scavenger;
++                    break;
+             }
+             $(".cell-type" ).css( "border-color", "black" );
+             var selected = '#'+this.id+'.cell-type';
+diff --git a/src/Hyperparameters.js b/src/Hyperparameters.js
+index d041cb6..6ead5f9 100644
+--- a/src/Hyperparameters.js
++++ b/src/Hyperparameters.js
+@@ -5,6 +5,7 @@ const Hyperparams = {
+         this.lifespanMultiplier = 100;
+         this.foodProdProb = 5;
+         this.healProb=5;
++        this.scavengeProb=10;
+         this.killableNeighbors = Neighbors.adjacent;
+         this.edibleNeighbors = Neighbors.adjacent;
+         this.growableNeighbors = Neighbors.adjacent;
+diff --git a/src/Organism/Cell/BodyCells/BodyCellFactory.js b/src/Organism/Cell/BodyCells/BodyCellFactory.js
+index e0a35c3..b49c7fd 100644
+--- a/src/Organism/Cell/BodyCells/BodyCellFactory.js
++++ b/src/Organism/Cell/BodyCells/BodyCellFactory.js
+@@ -5,6 +5,7 @@ const KillerCell = require("./KillerCell");
+ const ArmorCell = require("./ArmorCell");
+ const EyeCell = require("./EyeCell");
+ const HealerCell=require("./HealerCell");
++const ScavengerCell=require("./ScavengerCell");
+ const CellStates = require("../CellStates");
+ 
+ 
+@@ -18,6 +19,7 @@ const BodyCellFactory = {
+         type_map[CellStates.armor.name] = ArmorCell;
+         type_map[CellStates.eye.name] = EyeCell;
+         type_map[CellStates.healer.name]=HealerCell;
++        type_map[CellStates.scavenger.name]=ScavengerCell;
+         this.type_map = type_map;
+     },
+ 
+diff --git a/src/Organism/Cell/BodyCells/ScavengerCell.js b/src/Organism/Cell/BodyCells/ScavengerCell.js
+new file mode 100644
+index 0000000..ad7fc83
+--- /dev/null
++++ b/src/Organism/Cell/BodyCells/ScavengerCell.js
+@@ -0,0 +1,33 @@
++const CellStates=require("../CellStates");
++const BodyCell=require("./BodyCell");
++const Hyperparams=require("../../../Hyperparameters");
++
++//offsets exactly 2 steps away (Manhattan distance)
++const REACH=[[0,-2],[1,-1],[2,0],[1,1],[0,2],[-1,1],[-2,0],[-1,-1]];
++
++class ScavengerCell extends BodyCell{
++    constructor(org,loc_col,loc_row){
++        super(CellStates.scavenger,org,loc_col,loc_row);
++    }
++
++    performFunction(){
++        if(Math.random()*100>=Hyperparams.scavengeProb)
++            return;
++        const env=this.org.env;
++        const c=this.getRealCol();
++        const r=this.getRealRow();
++        const food=[];
++        for(const [dc,dr] of REACH){
++            const cell=env.grid_map.cellAt(c+dc,r+dr);
++            if(cell!=null&&cell.state==CellStates.food)
++                food.push(cell);
++        }
++        if(food.length==0)
++            return;
++        const target=food[Math.floor(Math.random()*food.length)];
++        env.changeCell(target.col,target.row,CellStates.empty,null);
++        this.org.food_collected++;
++    }
++}
++
++module.exports=ScavengerCell;
+diff --git a/src/Organism/Cell/CellStates.js b/src/Organism/Cell/CellStates.js
+index 75338d0..24b880a 100644
+--- a/src/Organism/Cell/CellStates.js
++++ b/src/Organism/Cell/CellStates.js
+@@ -80,6 +80,12 @@ class Healer extends CellState {
+     }
+ }
+ 
++class Scavenger extends CellState {
++    constructor() {
++        super('scavenger');
++    }
++}
++
+ const CellStates = {
+     empty: new Empty(),
+     food: new Food(),
+@@ -91,9 +97,10 @@ const CellStates = {
+     armor: new Armor(),
+     eye: new Eye(),
+     healer:new Healer(),
++    scavenger:new Scavenger(),
+     defineLists() {
+-        this.all = [this.empty, this.food, this.wall, this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer]
+-        this.living = [this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer];
++        this.all = [this.empty, this.food, this.wall, this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger]
++        this.living = [this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger];
+     },
+     getRandomName: function() {
+         return this.all[Math.floor(Math.random() * this.all.length)].name;
+diff --git a/src/Organism/Perception/Brain.js b/src/Organism/Perception/Brain.js
+index 9d11325..3c74cfa 100644
+--- a/src/Organism/Perception/Brain.js
++++ b/src/Organism/Perception/Brain.js
+@@ -46,6 +46,7 @@ class Brain {
+         this.decisions[CellStates.armor.name] = Decision.getRandom();
+         this.decisions[CellStates.eye.name] = Decision.getRandom();
+         this.decisions[CellStates.healer.name]=Decision.getRandom();
++        this.decisions[CellStates.scavenger.name]=Decision.getRandom();
+     }
+ 
+     observe(observation) {
+diff --git a/src/Rendering/ColorScheme.js b/src/Rendering/ColorScheme.js
+index f90e594..b13a5e3 100644
+--- a/src/Rendering/ColorScheme.js
++++ b/src/Rendering/ColorScheme.js
+@@ -11,6 +11,7 @@ var color_scheme = {
+     "armor":"#7230DB",
+     "eye":"#B6C1EA",
+     "healer":"#FFFFFF",
++    "scavenger":"#A65A2E",
+     "eye-slit": "#0E1318"
+ }
+ 

@@ -1,0 +1,952 @@
+diff --git a/dist/css/style.css b/dist/css/style.css
+index ea50686..22dca80 100644
+--- a/dist/css/style.css
++++ b/dist/css/style.css
+@@ -185,6 +185,15 @@ input:hover,input:active {
+     display: grid;
+ }
+ 
++/* keep the tab inside the 300px panel so it can scroll to the end */
++#hyperparameters.tab{
++    height:225px;
++    box-sizing:border-box;
++}
++.season-row{
++    margin:2px 0;
++}
++
+ .left-half {
+     grid-column: 1;
+ }
+diff --git a/dist/index.html b/dist/index.html
+index b000c85..f7a8d61 100644
+--- a/dist/index.html
++++ b/dist/index.html
+@@ -65,6 +65,7 @@
+ 							<div class='cell-legend-type' id='scavenger' title="Scavenger: Sometimes eats food 2 squares away."></div>
+ 							<div class='cell-legend-type' id='parasite' title="Parasite: Steals food from adjacent organisms. Blocked by armor and killer cells."></div>
+ 							<div class='cell-legend-type' id='kamikaze' title="Kamikaze: Explodes on death if the organism holds enough food."></div>
++							<div class='cell-legend-type' id='transporter' title="Transporter: Shares food with adjacent organisms of the same species."></div>
+ 							<div class='cell-legend-type' id='food' title="Food: Not part of an organism. Once an organism has eaten enough food, it will reproduce."></div>
+ 							<div class='cell-legend-type' id='wall' title="Wall: Not part of an organism. Blocks movement and reproduction."></div>
+ 						</div><br>
+@@ -106,6 +107,7 @@
+ 								<div class='cell-type' id='killer' title="Killer: Harms organisms in adjacent cells."></div>
+ 								<div class='cell-type' id='armor' title="Armor: Negates affects of killer cell."></div>
+ 								<div class='cell-type' id='eye' title="Eye: Looks for cells to move away from or towards. Click again on a placed cell to rotate"></div>
++								<div class='cell-type' id='transporter' title="Transporter: Shares food with adjacent organisms of the same species."></div>
+ 								<div class='cell-type' id='healer' title="Healer: Slowly repairs damage."></div>
+ 								<div class='cell-type' id='scavenger' title="Scavenger: Sometimes eats food 2 squares away."></div>
+ 							</div>
+@@ -163,6 +165,7 @@
+ 									<option value="scavenger">scavenger</option>
+ 									<option value="parasite">parasite</option>
+ 									<option value="kamikaze">kamikaze</option>
++									<option value="transporter">transporter</option>
+ 								</select>
+ 
+ 								<label for="reaction-edit">Reaction: </label>
+@@ -258,6 +261,32 @@
+ 						<br>
+ 						<label for="extra-mover-cost" title='Additional food cost for movers to reproduce'>Extra mover reproduction cost:</label>
+ 						<input type="number" id="extra-mover-cost" value=0 max="1000" step="1">
++						<h4>World Rules</h4>
++						<label for="kin-recognition" title="Killers and parasites spare their own species.">Kin recognition</label>
++						<input type="checkbox" id="kin-recognition">
++						<br>
++						<label for="transport-gap" title="Age difference at which food flows from older to younger.">Transporter age gap (ticks):</label>
++						<input type="number" id="transport-gap" min="0" value="40" step="1">
++						<br>
++						<label for="transport-amount" title="Used by the age and damage rules.">Transporter food per transfer:</label>
++						<input type="number" id="transport-amount" min="1" value="1" step="1">
++						<br>
++						<label for="food-rot-enabled" title="Uneaten food disappears.">Food rot</label>
++						<input type="checkbox" id="food-rot-enabled">
++						<br>
++						<label for="food-rot-ticks" title="Ticks before food rots.">Food lasts (ticks):</label>
++						<input type="number" id="food-rot-ticks" min="1" value="500" step="1">
++						<br>
++						<label for="meteor-enabled" title="Random areas are wiped out.">Meteors</label>
++						<input type="checkbox" id="meteor-enabled">
++						<br>
++						<label for="meteor-interval" title="A strike has a 1 in this many chance each tick.">Average ticks between meteors:</label>
++						<input type="number" id="meteor-interval" min="1" value="2000" step="1">
++						<br>
++						<label for="meteor-radius" title="Radius of the destroyed circle.">Meteor radius:</label>
++						<input type="number" id="meteor-radius" min="0" value="10" step="1">
++						<br>
++						<button id="meteor-now" title="Strike a random area now">Strike now</button>
+ 
+ 						
+ 					</div>
+@@ -289,6 +318,37 @@
+ 						<button id='load-controls' title="Load saved Evolution Controls with a .json file">Load</button>
+ 						<a id="download-el" style="display: none;"></a>
+ 						<input id="upload-hyperparams" style="display: none;" type="file">
++						<h4>Seasons</h4>
++						<label for="seasons-enabled" title="Seasons cycle in order and replace the food production probability.">Enable seasons</label>
++						<input type="checkbox" id="seasons-enabled">
++						<br>
++						<div id="season-list"></div>
++						<button id="add-season">Add season</button>
++						<div id="season-status"></div>
++						<h4>Zones</h4>
++						<label for="zone-view">Map view:</label>
++						<select id="zone-view">
++						<option value="off">off</option>
++						<option value="fertility">fertility</option>
++						<option value="mutation">mutation</option>
++						</select>
++						<br>
++						<label for="fertility-enabled" title="Multiplies producer food probability by the value at the target square.">Fertility zones</label>
++						<input type="checkbox" id="fertility-enabled">
++						<br>
++						<button class="edit-mode-btn fertility-up" id="fertility-up" title="Increase fertility (brush)">F+</button>
++						<button class="edit-mode-btn fertility-down" id="fertility-down" title="Decrease fertility (brush)">F-</button>
++						<button id="fertility-randomize">Randomize</button>
++						<button id="fertility-flatten">Flatten</button>
++						<br>
++						<label for="mutation-zones-enabled" title="Multiplies mutation chance by the value at the parent's centre.">Mutation zones</label>
++						<input type="checkbox" id="mutation-zones-enabled">
++						<br>
++						<button class="edit-mode-btn mutation-up" id="mutation-up" title="Increase mutation (brush)">M+</button>
++						<button class="edit-mode-btn mutation-down" id="mutation-down" title="Decrease mutation (brush)">M-</button>
++						<button id="mutation-randomize">Randomize</button>
++						<button id="mutation-flatten">Flatten</button>
++						<br>
+ 					</div>
+ 				</div>
+ 				<div id='stats' class='tab'>
+diff --git a/src/Controllers/ControlModes.js b/src/Controllers/ControlModes.js
+index 3213e4e..b86c20f 100644
+--- a/src/Controllers/ControlModes.js
++++ b/src/Controllers/ControlModes.js
+@@ -7,6 +7,10 @@ const Modes = {
+     Edit: 5,
+     Clone: 6,
+     Drag: 7,
++    FertilityUp:8,
++    FertilityDown:9,
++    MutationUp:10,
++    MutationDown:11,
+ }
+ 
+ module.exports = Modes;
+\ No newline at end of file
+diff --git a/src/Controllers/ControlPanel.js b/src/Controllers/ControlPanel.js
+index 0c33b25..87cf5f4 100644
+--- a/src/Controllers/ControlPanel.js
++++ b/src/Controllers/ControlPanel.js
+@@ -3,6 +3,7 @@ const Modes = require("./ControlModes");
+ const StatsPanel = require("../Stats/StatsPanel");
+ const WorldConfig = require("../WorldConfig");
+ const LoadController = require("./LoadController");
++const RulesPanel=require("./RulesPanel");
+ 
+ class ControlPanel {
+     constructor(engine) {
+@@ -263,6 +264,7 @@ class ControlPanel {
+     }
+ 
+     defineHyperparameterControls() {
++        RulesPanel.init(this.engine.env);
+         $('#food-prod-prob').change(function() {
+             Hyperparams.foodProdProb = $('#food-prod-prob').val();
+         }.bind(this));
+@@ -374,6 +376,7 @@ class ControlPanel {
+     }
+ 
+     updateHyperparamUIValues(){
++        RulesPanel.refresh();
+         $('#food-prod-prob').val(Hyperparams.foodProdProb);
+         $('#scavenge-prob').val(Hyperparams.scavengeProb);
+         $('#parasite-steal').val(Hyperparams.parasiteStealPercent);
+@@ -432,6 +435,22 @@ class ControlPanel {
+                     break;
+                 case "drag-view":
+                     self.setMode(Modes.Drag);
++                    break;
++                case "fertility-up":
++                    self.setMode(Modes.FertilityUp);
++                    RulesPanel.setView('fertility');
++                    break;
++                case "fertility-down":
++                    self.setMode(Modes.FertilityDown);
++                    RulesPanel.setView('fertility');
++                    break;
++                case "mutation-up":
++                    self.setMode(Modes.MutationUp);
++                    RulesPanel.setView('mutation');
++                    break;
++                case "mutation-down":
++                    self.setMode(Modes.MutationDown);
++                    RulesPanel.setView('mutation');
+             }
+             $('.edit-mode-btn').removeClass('selected');
+             $('.'+this.id).addClass('selected');
+@@ -541,6 +560,7 @@ class ControlPanel {
+         $('#fps-actual').text("Actual FPS: " + Math.floor(this.engine.actual_fps));
+         $('#reset-count').text("Auto reset count: " + this.engine.env.reset_count);
+         this.stats_panel.updateDetails();
++        RulesPanel.updateStatus();
+         if (WorldConfig.headless)
+             this.updateHeadlessIcon(delta_time);
+ 
+diff --git a/src/Controllers/EditorController.js b/src/Controllers/EditorController.js
+index 2718234..406457b 100644
+--- a/src/Controllers/EditorController.js
++++ b/src/Controllers/EditorController.js
+@@ -98,6 +98,9 @@ class EditorController extends CanvasController{
+                 case "kamikaze":
+                     self.edit_cell_type=CellStates.kamikaze;
+                     break;
++                case "transporter":
++                    self.edit_cell_type=CellStates.transporter;
++                    break;
+             }
+             $(".cell-type" ).css( "border-color", "black" );
+             var selected = '#'+this.id+'.cell-type';
+diff --git a/src/Controllers/EnvironmentController.js b/src/Controllers/EnvironmentController.js
+index 72985d6..0aa2760 100644
+--- a/src/Controllers/EnvironmentController.js
++++ b/src/Controllers/EnvironmentController.js
+@@ -6,6 +6,7 @@ const Neighbors = require("../Grid/Neighbors");
+ const FossilRecord = require("../Stats/FossilRecord");
+ const WorldConfig = require("../WorldConfig");
+ const Perlin = require("../Utils/Perlin");
++const ZoneMaps=require("../Grid/ZoneMaps");
+ 
+ class EnvironmentController extends CanvasController{
+     constructor(env, canvas) {
+@@ -145,6 +146,22 @@ class EnvironmentController extends CanvasController{
+                         this.dropOrganism(this.org_to_clone, this.mouse_c, this.mouse_r);
+                     }
+                     break;
++                case Modes.FertilityUp:
++                    if(left_click)
++                        this.paintZone(cell,'fertility',0.1);
++                    break;
++                case Modes.FertilityDown:
++                    if(left_click)
++                        this.paintZone(cell,'fertility',-0.1);
++                    break;
++                case Modes.MutationUp:
++                    if(left_click)
++                        this.paintZone(cell,'mutation',0.2);
++                    break;
++                case Modes.MutationDown:
++                    if(left_click)
++                        this.paintZone(cell,'mutation',-0.2);
++                    break;
+                 case Modes.Drag:
+                     this.dragScreen();
+                     break;
+@@ -156,6 +173,16 @@ class EnvironmentController extends CanvasController{
+         }
+     }
+ 
++    paintZone(center,key,delta){
++        for(const [dc,dr] of Neighbors.inRange(WorldConfig.brush_size)){
++            const cell=this.env.grid_map.cellAt(center.col+dc,center.row+dr);
++            if(cell==null)
++                continue;
++            cell[key]=ZoneMaps.clamp(key,cell[key]+delta);
++            this.env.renderer.addToRender(cell);
++        }
++    }
++
+     dragScreen() {
+         var cur_top = parseInt($('#env-canvas').css('top'));
+         var cur_left = parseInt($('#env-canvas').css('left'));
+diff --git a/src/Controllers/RulesPanel.js b/src/Controllers/RulesPanel.js
+new file mode 100644
+index 0000000..837ac3f
+--- /dev/null
++++ b/src/Controllers/RulesPanel.js
+@@ -0,0 +1,108 @@
++const Hyperparams=require("../Hyperparameters");
++const WorldConfig=require("../WorldConfig");
++const WorldRules=require("../Environments/WorldRules");
++const ZoneMaps=require("../Grid/ZoneMaps");
++
++const CHECKBOXES={
++    'kin-recognition':'kinRecognition',
++    'food-rot-enabled':'foodRotEnabled',
++    'seasons-enabled':'seasonsEnabled',
++    'meteor-enabled':'meteorEnabled',
++    'fertility-enabled':'fertilityEnabled',
++    'mutation-zones-enabled':'mutationZonesEnabled',
++};
++//element id -> [hyperparameter, minimum]
++const NUMBERS={
++    'transport-gap':['transportAgeGap',0],
++    'transport-amount':['transportAmount',1],
++    'food-rot-ticks':['foodRotTicks',1],
++    'meteor-interval':['meteorInterval',1],
++    'meteor-radius':['meteorRadius',0],
++};
++
++//UI for the world rules in Evolution Controls
++const RulesPanel={
++    init(env){
++        this.env=env;
++        for(const [id,key] of Object.entries(CHECKBOXES)){
++            $('#'+id).change(function(){
++                Hyperparams[key]=this.checked;
++            });
++        }
++        for(const [id,[key,min]] of Object.entries(NUMBERS)){
++            $('#'+id).change(function(){
++                const value=parseInt(this.value);
++                if(!isNaN(value))
++                    Hyperparams[key]=Math.max(min,value);
++                this.value=Hyperparams[key];
++            });
++        }
++        $('#add-season').click(()=>{
++            Hyperparams.seasons.push({ticks:1000,rate:5});
++            this.renderSeasons();
++        });
++        $('#meteor-now').click(()=>WorldRules.strikeMeteor(env));
++        $('#zone-view').change(function(){
++            RulesPanel.setView(this.value);
++        });
++        for(const key of ['fertility','mutation']){
++            $('#'+key+'-randomize').click(()=>{
++                ZoneMaps.randomize(env.grid_map,key);
++                this.setView(key);
++            });
++            $('#'+key+'-flatten').click(()=>{
++                ZoneMaps.flatten(env.grid_map,key);
++                this.setView(key);
++            });
++        }
++    },
++
++    setView(view){
++        WorldConfig.zone_view=view;
++        $('#zone-view').val(view);
++        if(!WorldConfig.headless)
++            this.env.renderFull();
++    },
++
++    refresh(){
++        for(const [id,key] of Object.entries(CHECKBOXES))
++            $('#'+id).prop('checked',Hyperparams[key]);
++        for(const [id,[key]] of Object.entries(NUMBERS))
++            $('#'+id).val(Hyperparams[key]);
++        this.renderSeasons();
++    },
++
++    renderSeasons(){
++        const list=$('#season-list').empty();
++        Hyperparams.seasons.forEach((season,i)=>{
++            const row=$('<div class="season-row"></div>').append('<b>Season '+(i+1)+'</b> ');
++            const field=(label,key,min,step)=>{
++                const input=$('<input type="number" style="width:70px">')
++                    .attr({min,step,'data-key':key}).val(season[key]);
++                input.change(()=>{
++                    const value=parseFloat(input.val());
++                    if(!isNaN(value))
++                        season[key]=Math.max(min,key=='ticks'?Math.round(value):value);
++                    input.val(season[key]);
++                });
++                row.append(label+' ',input,' ');
++            };
++            field('ticks','ticks',1,1);
++            field('food %','rate',0,'any');
++            const remove=$('<button title="Remove season">x</button>').click(()=>{
++                Hyperparams.seasons.splice(i,1);
++                this.renderSeasons();
++            });
++            list.append(row.append(remove));
++        });
++    },
++
++    updateStatus(){
++        const now=WorldRules.currentSeason(this.env);
++        $('#season-status').text(now?
++            'Current: season '+(now.index+1)+', '+now.ticks_left+' ticks left':
++            'Seasons inactive');
++    },
++}
++
++module.exports=RulesPanel;
+diff --git a/src/Environments/WorldEnvironment.js b/src/Environments/WorldEnvironment.js
+index afe3f7f..675ea8e 100644
+--- a/src/Environments/WorldEnvironment.js
++++ b/src/Environments/WorldEnvironment.js
+@@ -9,6 +9,8 @@ const FossilRecord = require('../Stats/FossilRecord');
+ const WorldConfig = require('../WorldConfig');
+ const SerializeHelper = require('../Utils/SerializeHelper');
+ const Species = require('../Stats/Species');
++const WorldRules=require('./WorldRules');
++const ZoneMaps=require('../Grid/ZoneMaps');
+ 
+ class WorldEnvironment extends Environment{
+     constructor(cell_size) {
+@@ -25,6 +27,8 @@ class WorldEnvironment extends Environment{
+         this.reset_count = 0;
+         this.total_ticks = 0;
+         this.data_update_rate = 100;
++        this.food_ages=new Map(); //grid cell -> tick its food appeared
++        this.renderer.overlay=cell=>ZoneMaps.color(cell,WorldConfig.zone_view);
+         FossilRecord.setEnv(this);
+     }
+ 
+@@ -40,6 +44,8 @@ class WorldEnvironment extends Environment{
+         if (Hyperparams.foodDropProb > 0) {
+             this.generateFood();
+         }
++        WorldRules.maybeMeteor(this);
++        WorldRules.rotFood(this);
+         this.total_ticks ++;
+         if (this.total_ticks % this.data_update_rate == 0) {
+             FossilRecord.updateData();
+@@ -108,11 +114,27 @@ class WorldEnvironment extends Environment{
+ 
+     changeCell(c, r, state, owner) {
+         super.changeCell(c, r, state, owner);
+-        this.renderer.addToRender(this.grid_map.cellAt(c, r));
++        const cell=this.grid_map.cellAt(c,r);
++        this.renderer.addToRender(cell);
++        //delete first so the map stays ordered by age
++        this.food_ages.delete(cell);
++        if(state==CellStates.food&&cell!=null)
++            this.food_ages.set(cell,this.total_ticks);
+         if(state == CellStates.wall)
+             this.walls.push(this.grid_map.cellAt(c, r));
+     }
+ 
++    //restarts the age of all food, after loading or clearing the grid
++    trackAllFood(){
++        this.food_ages.clear();
++        for(const col of this.grid_map.grid){
++            for(const cell of col){
++                if(cell.state==CellStates.food)
++                    this.food_ages.set(cell,this.total_ticks);
++            }
++        }
++    }
++
+     clearWalls() {
+         for(var wall of this.walls){
+             let wcell = this.grid_map.cellAt(wall.col, wall.row);
+@@ -161,6 +183,7 @@ class WorldEnvironment extends Environment{
+         this.renderer.renderFullGrid(this.grid_map.grid);
+         this.total_mutability = 0;
+         this.total_ticks = 0;
++        this.trackAllFood();
+         FossilRecord.clear_record();
+         if (reset_life)
+             this.OriginOfLife();
+@@ -235,6 +258,7 @@ class WorldEnvironment extends Environment{
+         SerializeHelper.overwriteNonObjects(env, this);
+         if ($('#override-controls').is(':checked'))
+             Hyperparams.loadJsonObj(env.controls)
++        this.trackAllFood();
+         this.renderer.renderFullGrid(this.grid_map.grid);
+     }
+ }
+diff --git a/src/Environments/WorldRules.js b/src/Environments/WorldRules.js
+new file mode 100644
+index 0000000..8c02516
+--- /dev/null
++++ b/src/Environments/WorldRules.js
+@@ -0,0 +1,74 @@
++const Hyperparams=require("../Hyperparameters");
++const CellStates=require("../Organism/Cell/CellStates");
++
++//world-level rules: seasons, food rot and meteors
++const WorldRules={
++    //returns {index,season,ticks_left}, or null when seasons have no effect
++    currentSeason(env){
++        if(!Hyperparams.seasonsEnabled)
++            return null;
++        const total=Hyperparams.seasons.reduce((sum,s)=>sum+s.ticks,0);
++        if(total<=0)
++            return null;
++        let t=env.total_ticks%total;
++        for(let index=0;index<Hyperparams.seasons.length;index++){
++            const season=Hyperparams.seasons[index];
++            if(t<season.ticks)
++                return {index,season,ticks_left:season.ticks-t};
++            t-=season.ticks;
++        }
++        return null;
++    },
++
++    foodProdProb(env){
++        const now=this.currentSeason(env);
++        return now?now.season.rate:Number(Hyperparams.foodProdProb);
++    },
++
++    //food_ages is ordered oldest first, so stop at the first fresh item
++    rotFood(env){
++        if(!Hyperparams.foodRotEnabled)
++            return;
++        for(const [cell,born] of env.food_ages){
++            if(env.total_ticks-born<Hyperparams.foodRotTicks)
++                break;
++            env.food_ages.delete(cell);
++            if(cell.state==CellStates.food)
++                env.changeCell(cell.col,cell.row,CellStates.empty,null);
++        }
++    },
++
++    maybeMeteor(env){
++        if(Hyperparams.meteorEnabled&&Math.random()<1/Hyperparams.meteorInterval)
++            this.strikeMeteor(env);
++    },
++
++    //kills organisms and destroys food in a circle. walls survive
++    strikeMeteor(env,col,row){
++        const grid=env.grid_map;
++        if(col===undefined){
++            col=Math.floor(Math.random()*grid.cols);
++            row=Math.floor(Math.random()*grid.rows);
++        }
++        const radius=Hyperparams.meteorRadius;
++        const hit=[];
++        for(let dc=-radius;dc<=radius;dc++){
++            for(let dr=-radius;dr<=radius;dr++){
++                const cell=grid.cellAt(col+dc,row+dr);
++                if(cell!=null&&dc*dc+dr*dr<=radius*radius)
++                    hit.push(cell);
++            }
++        }
++        //dead organisms are removed from the list on the next tick
++        for(const cell of hit){
++            if(cell.owner!=null&&cell.owner.living)
++                cell.owner.die();
++        }
++        for(const cell of hit){
++            if(cell.state==CellStates.food)
++                env.changeCell(cell.col,cell.row,CellStates.empty,null);
++        }
++    },
++}
++
++module.exports=WorldRules;
+diff --git a/src/Grid/GridMap.js b/src/Grid/GridMap.js
+index 5447896..c81a596 100644
+--- a/src/Grid/GridMap.js
++++ b/src/Grid/GridMap.js
+@@ -86,8 +86,11 @@ class GridMap {
+         let grid = {cell_size:this.cell_size, cols:this.cols, rows:this.rows};
+         grid.food = [];
+         grid.walls = [];
++        grid.zones=[];
+         for (let col of this.grid) {
+             for (let cell of col) {
++                if(cell.fertility!=1||cell.mutation!=1)
++                    grid.zones.push([cell.col,cell.row,cell.fertility,cell.mutation]);
+                 if (cell.state===CellStates.wall || cell.state===CellStates.food){
+                     let c = {c: cell.col, r: cell.row}; // no need to store state
+                     if (cell.state===CellStates.food)
+@@ -101,6 +104,11 @@ class GridMap {
+     }
+ 
+     loadRaw(grid) {
++        for(const [c,r,fertility,mutation] of grid.zones||[]){
++            const cell=this.cellAt(c,r);
++            if(cell!=null)
++                Object.assign(cell,{fertility,mutation});
++        }
+         for (let f of grid.food)
+             this.setCellType(f.c, f.r, CellStates.food);
+         for (let w of grid.walls)
+diff --git a/src/Grid/ZoneMaps.js b/src/Grid/ZoneMaps.js
+new file mode 100644
+index 0000000..b0c0535
+--- /dev/null
++++ b/src/Grid/ZoneMaps.js
+@@ -0,0 +1,38 @@
++const Perlin=require("../Utils/Perlin");
++
++//per-cell multipliers. 1 is neutral
++const ZoneMaps={
++    max:{fertility:3,mutation:5},
++    //[above neutral, below neutral]
++    colors:{fertility:["60,255,60","255,60,40"],mutation:["255,40,220","40,200,255"]},
++
++    clamp(key,value){
++        return Math.round(Math.min(this.max[key],Math.max(0,value))*100)/100;
++    },
++
++    randomize(grid_map,key){
++        Perlin.seed();
++        for(const col of grid_map.grid){
++            for(const cell of col)
++                cell[key]=this.clamp(key,1+Perlin.get(cell.col/20,cell.row/20)*2.5);
++        }
++    },
++
++    flatten(grid_map,key){
++        for(const col of grid_map.grid){
++            for(const cell of col)
++                cell[key]=1;
++        }
++    },
++
++    //heat map tint for a cell, or null
++    color(cell,key){
++        if(!this.max[key]||cell[key]==1)
++            return null;
++        const above=cell[key]>1;
++        const strength=above?(cell[key]-1)/(this.max[key]-1):1-cell[key];
++        return "rgba("+this.colors[key][above?0:1]+","+(0.12+0.5*strength)+")";
++    },
++}
++
++module.exports=ZoneMaps;
+diff --git a/src/Hyperparameters.js b/src/Hyperparameters.js
+index 79b768d..b6e0ba6 100644
+--- a/src/Hyperparameters.js
++++ b/src/Hyperparameters.js
+@@ -9,6 +9,18 @@ const Hyperparams = {
+         this.parasiteStealPercent=50;
+         this.parasiteCooldown=20;
+         this.kamikazeRange=2;
++        this.transportAgeGap=40;
++        this.transportAmount=1;
++        this.kinRecognition=false;
++        this.foodRotEnabled=false;
++        this.foodRotTicks=500;
++        this.seasonsEnabled=false;
++        this.seasons=[{ticks:1000,rate:8},{ticks:1000,rate:2}];
++        this.meteorEnabled=false;
++        this.meteorInterval=2000;
++        this.meteorRadius=10;
++        this.fertilityEnabled=false;
++        this.mutationZonesEnabled=false;
+         this.killableNeighbors = Neighbors.adjacent;
+         this.edibleNeighbors = Neighbors.adjacent;
+         this.growableNeighbors = Neighbors.adjacent;
+diff --git a/src/Organism/Cell/BodyCells/BodyCellFactory.js b/src/Organism/Cell/BodyCells/BodyCellFactory.js
+index f6d4abc..2ade8b3 100644
+--- a/src/Organism/Cell/BodyCells/BodyCellFactory.js
++++ b/src/Organism/Cell/BodyCells/BodyCellFactory.js
+@@ -8,6 +8,7 @@ const HealerCell=require("./HealerCell");
+ const ScavengerCell=require("./ScavengerCell");
+ const ParasiteCell=require("./ParasiteCell");
+ const KamikazeCell=require("./KamikazeCell");
++const TransporterCell=require("./TransporterCell");
+ const CellStates = require("../CellStates");
+ 
+ 
+@@ -24,6 +25,7 @@ const BodyCellFactory = {
+         type_map[CellStates.scavenger.name]=ScavengerCell;
+         type_map[CellStates.parasite.name]=ParasiteCell;
+         type_map[CellStates.kamikaze.name]=KamikazeCell;
++        type_map[CellStates.transporter.name]=TransporterCell;
+         this.type_map = type_map;
+     },
+ 
+diff --git a/src/Organism/Cell/BodyCells/KamikazeCell.js b/src/Organism/Cell/BodyCells/KamikazeCell.js
+index 4c33973..cf53140 100644
+--- a/src/Organism/Cell/BodyCells/KamikazeCell.js
++++ b/src/Organism/Cell/BodyCells/KamikazeCell.js
+@@ -8,20 +8,33 @@ class KamikazeCell extends BodyCell{
+         super(CellStates.kamikaze,org,loc_col,loc_row);
+     }
+ 
+-    //called by Organism.die()
+-    explode(){
+-        const env=this.org.env;
++    blastArea(){
++        const grid=this.org.env.grid_map;
+         const c=this.getRealCol();
+         const r=this.getRealRow();
+-        for(const [dc,dr] of Neighbors.inRange(Hyperparams.kamikazeRange)){
+-            const cell=env.grid_map.cellAt(c+dc,r+dr);
+-            if(cell==null||cell.owner==null||cell.owner==this.org||!cell.owner.living)
++        return Neighbors.inRange(Hyperparams.kamikazeRange)
++            .map(([dc,dr])=>grid.cellAt(c+dc,r+dr))
++            .filter(cell=>cell!=null);
++    }
++
++    //called by Organism.die()
++    explode(){
++        for(const cell of this.blastArea()){
++            if(cell.owner==null||cell.owner==this.org||!cell.owner.living)
+                 continue;
+             if(cell.state==CellStates.armor)
+                 continue;
+             cell.owner.harm();
+         }
+     }
++
++    //also called by Organism.die(), after every blast has done its damage
++    destroyFood(){
++        for(const cell of this.blastArea()){
++            if(cell.state==CellStates.food)
++                this.org.env.changeCell(cell.col,cell.row,CellStates.empty,null);
++        }
++    }
+ }
+ 
+ module.exports=KamikazeCell;
+diff --git a/src/Organism/Cell/BodyCells/KillerCell.js b/src/Organism/Cell/BodyCells/KillerCell.js
+index c7dcd92..dc11f29 100644
+--- a/src/Organism/Cell/BodyCells/KillerCell.js
++++ b/src/Organism/Cell/BodyCells/KillerCell.js
+@@ -20,6 +20,8 @@ class KillerCell extends BodyCell{
+     killNeighbor(n_cell) {
+         if(n_cell == null || n_cell.owner == null || n_cell.owner == this.org || !n_cell.owner.living || n_cell.state == CellStates.armor) 
+             return;
++        if(Hyperparams.kinRecognition&&n_cell.owner.species===this.org.species)
++            return;
+         var is_hit = n_cell.state == CellStates.killer; // has to be calculated before death
+         n_cell.owner.harm();
+         if (Hyperparams.instaKill && is_hit) {
+diff --git a/src/Organism/Cell/BodyCells/ParasiteCell.js b/src/Organism/Cell/BodyCells/ParasiteCell.js
+index ce6bb2f..14b2135 100644
+--- a/src/Organism/Cell/BodyCells/ParasiteCell.js
++++ b/src/Organism/Cell/BodyCells/ParasiteCell.js
+@@ -32,6 +32,8 @@ class ParasiteCell extends BodyCell{
+         if(cell.state==CellStates.armor||cell.state==CellStates.killer)
+             return false;
+         const victim=cell.owner;
++        if(Hyperparams.kinRecognition&&victim.species===this.org.species)
++            return false;
+         //rounded up, so a victim holding 1 food can still be robbed
+         const amount=Math.ceil(victim.food_collected*Hyperparams.parasiteStealPercent/100);
+         if(amount<=0)
+diff --git a/src/Organism/Cell/BodyCells/ProducerCell.js b/src/Organism/Cell/BodyCells/ProducerCell.js
+index b6c4b3e..0228270 100644
+--- a/src/Organism/Cell/BodyCells/ProducerCell.js
++++ b/src/Organism/Cell/BodyCells/ProducerCell.js
+@@ -1,6 +1,7 @@
+ const CellStates = require("../CellStates");
+ const BodyCell = require("./BodyCell");
+ const Hyperparams = require("../../../Hyperparameters");
++const WorldRules=require("../../../Environments/WorldRules");
+ 
+ class ProducerCell extends BodyCell{
+     constructor(org, loc_col, loc_row){
+@@ -12,19 +13,17 @@ class ProducerCell extends BodyCell{
+         if (this.org.anatomy.is_mover && !Hyperparams.moversCanProduce)
+             return;
+         var env = this.org.env;
+-        var prob = Hyperparams.foodProdProb;
+         var real_c = this.getRealCol();
+         var real_r = this.getRealRow();
+-        if (Math.random() * 100 <= prob) {
+-            var loc = Hyperparams.growableNeighbors[Math.floor(Math.random() * Hyperparams.growableNeighbors.length)]
+-            var loc_c=loc[0];
+-            var loc_r=loc[1];
+-            var cell = env.grid_map.cellAt(real_c+loc_c, real_r+loc_r);
+-            if (cell != null && cell.state == CellStates.empty){
+-                env.changeCell(real_c+loc_c, real_r+loc_r, CellStates.food, null);
+-                return;
+-            }
+-        }
++        var loc = Hyperparams.growableNeighbors[Math.floor(Math.random() * Hyperparams.growableNeighbors.length)]
++        var cell = env.grid_map.cellAt(real_c+loc[0], real_r+loc[1]);
++        if (cell == null || cell.state != CellStates.empty)
++            return;
++        var prob=WorldRules.foodProdProb(env);
++        if(Hyperparams.fertilityEnabled)
++            prob*=cell.fertility;
++        if (Math.random() * 100 < prob)
++            env.changeCell(cell.col, cell.row, CellStates.food, null);
+     }
+ }
+ 
+diff --git a/src/Organism/Cell/BodyCells/TransporterCell.js b/src/Organism/Cell/BodyCells/TransporterCell.js
+new file mode 100644
+index 0000000..5e33190
+--- /dev/null
++++ b/src/Organism/Cell/BodyCells/TransporterCell.js
+@@ -0,0 +1,65 @@
++const CellStates=require("../CellStates");
++const BodyCell=require("./BodyCell");
++const Hyperparams=require("../../../Hyperparameters");
++const Neighbors=require("../../../Grid/Neighbors");
++
++class TransporterCell extends BodyCell{
++    constructor(org,loc_col,loc_row){
++        super(CellStates.transporter,org,loc_col,loc_row);
++    }
++
++    //at most one transfer per tick
++    performFunction(){
++        const env=this.org.env;
++        const c=this.getRealCol();
++        const r=this.getRealRow();
++        for(const [dc,dr] of Neighbors.adjacent){
++            const cell=env.grid_map.cellAt(c+dc,r+dr);
++            if(cell!=null&&this.shareWith(cell.owner))
++                return;
++        }
++    }
++
++    shareWith(other){
++        const mine=this.org;
++        if(other==null||other==mine||!other.living||other.species!==mine.species)
++            return false;
++        const deficit=org=>org.foodNeeded()-org.food_collected;
++        //one of them can already reproduce, so leave both alone
++        if(deficit(mine)<=0||deficit(other)<=0)
++            return false;
++
++        //1. complete one organism's reproduction, using the smaller transfer
++        const options=[[mine,other],[other,mine]]
++            .filter(([from,to])=>from.food_collected>=deficit(to))
++            .sort((a,b)=>deficit(a[1])-deficit(b[1]));
++        if(options.length>0){
++            const [from,to]=options[0];
++            return this.move(from,to,deficit(to));
++        }
++
++        let from,to;
++        if(Math.abs(mine.lifetime-other.lifetime)>=Hyperparams.transportAgeGap){
++            //2. older to younger
++            [from,to]=mine.lifetime>other.lifetime?[mine,other]:[other,mine];
++        }
++        else if(mine.damage!=other.damage){
++            //3. more damaged to less damaged
++            [from,to]=mine.damage>other.damage?[mine,other]:[other,mine];
++        }
++        else{
++            return false;
++        }
++        return this.move(from,to,Math.min(Hyperparams.transportAmount,from.food_collected,deficit(to)));
++    }
++
++    move(from,to,amount){
++        if(amount<=0)
++            return false;
++        from.food_collected-=amount;
++        to.food_collected+=amount;
++        return true;
++    }
++}
++
++module.exports=TransporterCell;
+diff --git a/src/Organism/Cell/CellStates.js b/src/Organism/Cell/CellStates.js
+index a6ade6a..79471a5 100644
+--- a/src/Organism/Cell/CellStates.js
++++ b/src/Organism/Cell/CellStates.js
+@@ -98,6 +98,12 @@ class Kamikaze extends CellState {
+     }
+ }
+ 
++class Transporter extends CellState {
++    constructor() {
++        super('transporter');
++    }
++}
++
+ const CellStates = {
+     empty: new Empty(),
+     food: new Food(),
+@@ -112,9 +118,10 @@ const CellStates = {
+     scavenger:new Scavenger(),
+     parasite:new Parasite(),
+     kamikaze:new Kamikaze(),
++    transporter:new Transporter(),
+     defineLists() {
+-        this.all = [this.empty, this.food, this.wall, this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger, this.parasite, this.kamikaze]
+-        this.living = [this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger, this.parasite, this.kamikaze];
++        this.all = [this.empty, this.food, this.wall, this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger, this.parasite, this.kamikaze, this.transporter]
++        this.living = [this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger, this.parasite, this.kamikaze, this.transporter];
+     },
+     getRandomName: function() {
+         return this.all[Math.floor(Math.random() * this.all.length)].name;
+diff --git a/src/Organism/Cell/GridCell.js b/src/Organism/Cell/GridCell.js
+index fd3bdff..9a83ea4 100644
+--- a/src/Organism/Cell/GridCell.js
++++ b/src/Organism/Cell/GridCell.js
+@@ -7,6 +7,8 @@ class Cell{
+         this.owner = null; // owner organism
+         this.cell_owner = null; // specific body cell of the owner organism that occupies this grid cell
+         this.setType(state);
++        this.fertility=1;
++        this.mutation=1;
+         this.col = col;
+         this.row = row;
+         this.x = x;
+diff --git a/src/Organism/Organism.js b/src/Organism/Organism.js
+index 445bcb7..4efc353 100644
+--- a/src/Organism/Organism.js
++++ b/src/Organism/Organism.js
+@@ -77,6 +77,8 @@ class Organism {
+                     org.mutability = 1;
+             }
+         } 
++        if(Hyperparams.mutationZonesEnabled)
++            prob*=this.env.grid_map.cellAt(this.c,this.r).mutation;
+         var mutated = false;
+         if (Math.random() * 100 <= prob) {
+             if (org.anatomy.is_mover && Math.random() * 100 <= 10) { 
+@@ -271,10 +273,11 @@ class Organism {
+         }
+         this.species.decreasePop();
+         if(can_explode){
+-            for(const cell of this.anatomy.cells){
+-                if(cell.state==CellStates.kamikaze)
+-                    cell.explode();
+-            }
++            const bombs=this.anatomy.cells.filter(cell=>cell.state==CellStates.kamikaze);
++            for(const bomb of bombs)
++                bomb.explode();
++            for(const bomb of bombs)
++                bomb.destroyFood();
+         }
+     }
+ 
+diff --git a/src/Organism/Perception/Brain.js b/src/Organism/Perception/Brain.js
+index 81589ef..1e5614b 100644
+--- a/src/Organism/Perception/Brain.js
++++ b/src/Organism/Perception/Brain.js
+@@ -49,6 +49,7 @@ class Brain {
+         this.decisions[CellStates.scavenger.name]=Decision.getRandom();
+         this.decisions[CellStates.parasite.name]=Decision.getRandom();
+         this.decisions[CellStates.kamikaze.name]=Decision.getRandom();
++        this.decisions[CellStates.transporter.name]=Decision.getRandom();
+     }
+ 
+     observe(observation) {
+diff --git a/src/Rendering/ColorScheme.js b/src/Rendering/ColorScheme.js
+index 456d124..24bd1a8 100644
+--- a/src/Rendering/ColorScheme.js
++++ b/src/Rendering/ColorScheme.js
+@@ -14,6 +14,7 @@ var color_scheme = {
+     "scavenger":"#A65A2E",
+     "parasite":"#B53DB5",
+     "kamikaze":"#8B0000",
++    "transporter":"#00A896",
+     "eye-slit": "#0E1318"
+ }
+ 
+diff --git a/src/Rendering/Renderer.js b/src/Rendering/Renderer.js
+index 41d04c5..504da0f 100644
+--- a/src/Rendering/Renderer.js
++++ b/src/Rendering/Renderer.js
+@@ -49,6 +49,11 @@ class Renderer {
+ 
+     renderCell(cell) {
+         cell.state.render(this.ctx, cell, this.cell_size);
++        const tint=this.overlay?this.overlay(cell):null;
++        if(tint){
++            this.ctx.fillStyle=tint;
++            this.ctx.fillRect(cell.x,cell.y,this.cell_size,this.cell_size);
++        }
+     }
+ 
+     renderOrganism(org) {
+diff --git a/src/WorldConfig.js b/src/WorldConfig.js
+index 7e853ec..fe31b55 100644
+--- a/src/WorldConfig.js
++++ b/src/WorldConfig.js
+@@ -4,6 +4,7 @@ const WorldConfig = {
+     auto_reset: true,
+     auto_pause: false,
+     brush_size: 2,
++    zone_view:'off',
+ }
+ 
+ module.exports = WorldConfig;
+\ No newline at end of file

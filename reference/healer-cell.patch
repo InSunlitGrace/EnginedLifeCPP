@@ -1,0 +1,150 @@
+diff --git a/dist/index.html b/dist/index.html
+index bdc967f..22146a5 100644
+--- a/dist/index.html
++++ b/dist/index.html
+@@ -61,6 +61,7 @@
+ 							<div class='cell-legend-type' id='killer' title="Killer: Harms organisms in adjacent cells."></div>
+ 							<div class='cell-legend-type' id='armor' title="Armor: Negates affects of killer cell."></div>
+ 							<div class='cell-legend-type' id='eye' title="Eye: Observes cells and decides movement."></div>
++							<div class='cell-legend-type' id='healer' title="Healer: Slowly repairs damage."></div>
+ 							<div class='cell-legend-type' id='food' title="Food: Not part of an organism. Once an organism has eaten enough food, it will reproduce."></div>
+ 							<div class='cell-legend-type' id='wall' title="Wall: Not part of an organism. Blocks movement and reproduction."></div>
+ 						</div><br>
+@@ -100,6 +101,7 @@
+ 								<div class='cell-type' id='killer' title="Killer: Harms organisms in adjacent cells."></div>
+ 								<div class='cell-type' id='armor' title="Armor: Negates affects of killer cell."></div>
+ 								<div class='cell-type' id='eye' title="Eye: Looks for cells to move away from or towards. Click again on a placed cell to rotate"></div>
++								<div class='cell-type' id='healer' title="Healer: Slowly repairs damage."></div>
+ 							</div>
+ 
+ 							<button id='clear-editor'>Clear</button>
+@@ -151,6 +153,7 @@
+ 									<option value="killer">killer</option>
+ 									<option value="armor">armor</option>
+ 									<option value="eye">eye</option>
++									<option value="healer">healer</option>
+ 								</select>
+ 
+ 								<label for="reaction-edit">Reaction: </label>
+diff --git a/src/Controllers/EditorController.js b/src/Controllers/EditorController.js
+index e743611..9046efc 100644
+--- a/src/Controllers/EditorController.js
++++ b/src/Controllers/EditorController.js
+@@ -86,6 +86,9 @@ class EditorController extends CanvasController{
+                 case "eye":
+                     self.edit_cell_type = CellStates.eye;
+                     break;
++                case "healer":
++                    self.edit_cell_type=CellStates.healer;
++                    break;
+             }
+             $(".cell-type" ).css( "border-color", "black" );
+             var selected = '#'+this.id+'.cell-type';
+diff --git a/src/Hyperparameters.js b/src/Hyperparameters.js
+index 630e62c..d041cb6 100644
+--- a/src/Hyperparameters.js
++++ b/src/Hyperparameters.js
+@@ -4,6 +4,7 @@ const Hyperparams = {
+     setDefaults: function() {
+         this.lifespanMultiplier = 100;
+         this.foodProdProb = 5;
++        this.healProb=5;
+         this.killableNeighbors = Neighbors.adjacent;
+         this.edibleNeighbors = Neighbors.adjacent;
+         this.growableNeighbors = Neighbors.adjacent;
+diff --git a/src/Organism/Cell/BodyCells/BodyCellFactory.js b/src/Organism/Cell/BodyCells/BodyCellFactory.js
+index 577f609..e0a35c3 100644
+--- a/src/Organism/Cell/BodyCells/BodyCellFactory.js
++++ b/src/Organism/Cell/BodyCells/BodyCellFactory.js
+@@ -4,6 +4,7 @@ const MoverCell = require("./MoverCell");
+ const KillerCell = require("./KillerCell");
+ const ArmorCell = require("./ArmorCell");
+ const EyeCell = require("./EyeCell");
++const HealerCell=require("./HealerCell");
+ const CellStates = require("../CellStates");
+ 
+ 
+@@ -16,6 +17,7 @@ const BodyCellFactory = {
+         type_map[CellStates.killer.name] = KillerCell;
+         type_map[CellStates.armor.name] = ArmorCell;
+         type_map[CellStates.eye.name] = EyeCell;
++        type_map[CellStates.healer.name]=HealerCell;
+         this.type_map = type_map;
+     },
+ 
+diff --git a/src/Organism/Cell/BodyCells/HealerCell.js b/src/Organism/Cell/BodyCells/HealerCell.js
+new file mode 100644
+index 0000000..2de49d4
+--- /dev/null
++++ b/src/Organism/Cell/BodyCells/HealerCell.js
+@@ -0,0 +1,16 @@
++const CellStates=require("../CellStates");
++const BodyCell=require("./BodyCell");
++const Hyperparams=require("../../../Hyperparameters");
++
++class HealerCell extends BodyCell{
++    constructor(org,loc_col,loc_row){
++        super(CellStates.healer,org,loc_col,loc_row);
++    }
++
++    performFunction(){
++        if(this.org.damage>0&&Math.random()*100<Hyperparams.healProb)
++            this.org.damage--;
++    }
++}
++
++module.exports=HealerCell;
+diff --git a/src/Organism/Cell/CellStates.js b/src/Organism/Cell/CellStates.js
+index 9bf54f8..75338d0 100644
+--- a/src/Organism/Cell/CellStates.js
++++ b/src/Organism/Cell/CellStates.js
+@@ -74,6 +74,12 @@ class Eye extends CellState {
+     }
+ }
+ 
++class Healer extends CellState {
++    constructor() {
++        super('healer');
++    }
++}
++
+ const CellStates = {
+     empty: new Empty(),
+     food: new Food(),
+@@ -84,9 +90,10 @@ const CellStates = {
+     killer: new Killer(),
+     armor: new Armor(),
+     eye: new Eye(),
++    healer:new Healer(),
+     defineLists() {
+-        this.all = [this.empty, this.food, this.wall, this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye]
+-        this.living = [this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye];
++        this.all = [this.empty, this.food, this.wall, this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer]
++        this.living = [this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer];
+     },
+     getRandomName: function() {
+         return this.all[Math.floor(Math.random() * this.all.length)].name;
+diff --git a/src/Organism/Perception/Brain.js b/src/Organism/Perception/Brain.js
+index 4c60b03..9d11325 100644
+--- a/src/Organism/Perception/Brain.js
++++ b/src/Organism/Perception/Brain.js
+@@ -45,6 +45,7 @@ class Brain {
+         this.decisions[CellStates.mover.name] = Decision.getRandom();
+         this.decisions[CellStates.armor.name] = Decision.getRandom();
+         this.decisions[CellStates.eye.name] = Decision.getRandom();
++        this.decisions[CellStates.healer.name]=Decision.getRandom();
+     }
+ 
+     observe(observation) {
+diff --git a/src/Rendering/ColorScheme.js b/src/Rendering/ColorScheme.js
+index 30ce7f9..f90e594 100644
+--- a/src/Rendering/ColorScheme.js
++++ b/src/Rendering/ColorScheme.js
+@@ -10,6 +10,7 @@ var color_scheme = {
+     "killer":"#F82380",
+     "armor":"#7230DB",
+     "eye":"#B6C1EA",
++    "healer":"#FFFFFF",
+     "eye-slit": "#0E1318"
+ }
+ 

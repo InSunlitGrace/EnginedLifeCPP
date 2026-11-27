@@ -1,0 +1,165 @@
+diff --git a/dist/css/style.css b/dist/css/style.css
+index 6114552..59ba950 100644
+--- a/dist/css/style.css
++++ b/dist/css/style.css
+@@ -379,3 +379,33 @@ details.sub > summary {
+ #close-load-btn { float: right; }
+ #load-panel-title { white-space: nowrap; }
+ #load-panel-title * { display: inline; }
++
++#cell-table table {
++    width: 100%;
++    margin-top: 10px;
++    border-collapse: collapse;
++    font-variant-numeric: tabular-nums;
++}
++#cell-table caption {
++    text-align: left;
++    padding-bottom: 4px;
++}
++#cell-table th, #cell-table td {
++    padding: 3px 6px;
++    text-align: right;
++    border-bottom: 1px solid rgba(128, 128, 128, 0.3);
++}
++#cell-table th:first-child, #cell-table td:first-child {
++    text-align: left;
++    text-transform: capitalize;
++}
++#cell-table tfoot td {
++    font-weight: bold;
++}
++#cell-table .swatch {
++    display: inline-block;
++    width: 10px;
++    height: 10px;
++    margin-right: 6px;
++    border: 1px solid #888;
++}
+diff --git a/dist/index.html b/dist/index.html
+index ae2623f..454b932 100644
+--- a/dist/index.html
++++ b/dist/index.html
+@@ -181,7 +181,7 @@
+ <div class="row" title=""><label for="food-rot-ticks">Food lasts (ticks)</label><input type="number" id="food-rot-ticks" min="1" step="1" value="500"></div>
+ </div></details>
+ <details class="section"><summary>Seasons</summary><div class="body">
+-<div class="row" title="Replaces the producer food probability"><label for="seasons-enabled">Enable seasons</label><input type="checkbox" id="seasons-enabled"></div>
++<div class="row" title="Each season multiplies the producer food probability"><label for="seasons-enabled">Enable seasons</label><input type="checkbox" id="seasons-enabled"></div>
+ <div id="season-list"></div>
+ <button id="add-season">Add season</button>
+ <div id="season-status"></div>
+@@ -226,6 +226,7 @@
+ <option value="population">Population</option><option value="species">Species</option><option value="structure">Organism Structure</option><option value="mut-rate">Mutation Rate</option></select></div>
+ <p id="chart-note"></p>
+ <div id="chartContainer"></div>
++<div id="cell-table"></div>
+ </div>
+ </div>
+ <a id="download-el" style="display:none;"></a>
+diff --git a/src/Controllers/RulesPanel.js b/src/Controllers/RulesPanel.js
+index 3bb02e6..7c4dbc1 100644
+--- a/src/Controllers/RulesPanel.js
++++ b/src/Controllers/RulesPanel.js
+@@ -51,7 +51,7 @@ const RulesPanel={
+             });
+         }
+         $('#add-season').click(()=>{
+-            Hyperparams.seasons.push({ticks:1000,rate:5});
++            Hyperparams.seasons.push({ticks:1000,multiplier:1});
+             this.renderSeasons();
+         });
+         $('#meteor-now').click(()=>WorldRules.strikeMeteor(env));
+@@ -101,7 +101,7 @@ const RulesPanel={
+                 row.append(label+' ',input,' ');
+             };
+             field('ticks','ticks',1,1);
+-            field('food %','rate',0,'any');
++            field('food x','multiplier',0,'any');
+             const remove=$('<button title="Remove season">x</button>').click(()=>{
+                 Hyperparams.seasons.splice(i,1);
+                 this.renderSeasons();
+diff --git a/src/Environments/WorldRules.js b/src/Environments/WorldRules.js
+index 7707272..5e3a94b 100644
+--- a/src/Environments/WorldRules.js
++++ b/src/Environments/WorldRules.js
+@@ -23,7 +23,9 @@ const WorldRules={
+ 
+     foodProdProb(env){
+         const now=this.currentSeason(env);
+-        return now?now.season.rate:Number(Hyperparams.foodProdProb);
++        const base=Number(Hyperparams.foodProdProb);
++        // a season scales the producer probability; a missing multiplier means 1x
++        return now?base*(now.season.multiplier??1):base;
+     },
+ 
+     //food_ages is ordered oldest first, so stop at the first fresh item
+diff --git a/src/Hyperparameters.js b/src/Hyperparameters.js
+index 9545f77..a438be4 100644
+--- a/src/Hyperparameters.js
++++ b/src/Hyperparameters.js
+@@ -23,7 +23,7 @@ const Hyperparams = {
+         this.foodRotEnabled=false;
+         this.foodRotTicks=500;
+         this.seasonsEnabled=false;
+-        this.seasons=[{ticks:1000,rate:8},{ticks:1000,rate:2}];
++        this.seasons=[{ticks:1000,multiplier:1.5},{ticks:1000,multiplier:0.5}];
+         this.meteorEnabled=false;
+         this.meteorInterval=2000;
+         this.meteorRadius=10;
+diff --git a/src/Stats/Charts/CellsChart.js b/src/Stats/Charts/CellsChart.js
+index 9a10c5b..6d10c24 100644
+--- a/src/Stats/Charts/CellsChart.js
++++ b/src/Stats/Charts/CellsChart.js
+@@ -39,6 +39,38 @@ class CellsChart extends ChartController {
+ 
+     }
+ 
++    render() {
++        super.render();
++        this.renderTable();
++    }
++
++    // latest averages as numbers, since rare cell types are too small to see in the graph
++    renderTable() {
++        const last=FossilRecord.tick_record.length-1;
++        const table=$('#cell-table').empty();
++        if (last<0) return;
++        const counts=FossilRecord.av_cell_counts[last];
++        const total=FossilRecord.av_cells[last];
++
++        const row=(tag,values)=>$('<tr>').append(values.map(v=>$(`<${tag}>`).text(v)));
++        const body=$('<tbody>');
++        for (const c of CellStates.living) {
++            const count=counts[c.name]||0;
++            const share=total>0?count/total*100:0;
++            const tr=row('td',[c.name,count.toFixed(3),share.toFixed(2)+'%']);
++            tr.children().first().prepend($('<span class="swatch">').css('background-color',c.color));
++            body.append(tr);
++        }
++        table.append(
++            $('<table>').append(
++                $('<caption>').text('Contribution at tick '+FossilRecord.tick_record[last]),
++                $('<thead>').append(row('th',['Cell type','Avg. per organism','Share'])),
++                body,
++                $('<tfoot>').append(row('td',['Total',total.toFixed(3),total>0?'100%':'0%']))
++            )
++        );
++    }
++
+     addDataPoint(i) {
+         var t = FossilRecord.tick_record[i];
+         var p = FossilRecord.av_cells[i];
+diff --git a/src/Stats/Charts/ChartController.js b/src/Stats/Charts/ChartController.js
+index 16b3ed8..58e3a27 100644
+--- a/src/Stats/Charts/ChartController.js
++++ b/src/Stats/Charts/ChartController.js
+@@ -20,6 +20,8 @@ class ChartController {
+         });
+         this.chart.render();
+         $('#chart-note').text(note);
++        // only the cell chart fills this in
++        $('#cell-table').empty();
+     }
+ 
+     setData() {

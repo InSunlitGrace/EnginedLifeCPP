@@ -1,0 +1,2733 @@
+diff --git a/dist/css/style.css b/dist/css/style.css
+index 22dca80..6114552 100644
+--- a/dist/css/style.css
++++ b/dist/css/style.css
+@@ -7,22 +7,20 @@
+     --btn-click: #595e77;
+     --tab: #416788;
+     --tab-active: #66a39b;
++    --sidebar:380px;
+ }
+-
+-body{
+-    background: var(--tab);
++* {
+     margin: 0;
+     padding: 0;
++    box-sizing: border-box;
++    font-family: Arial, Helvetica, sans-serif;
++}
++body {
++    background: var(--tab);
+     height: 100%;
+     width: 100%;
++    font-size: 14px;
+ }
+-
+-* {
+-    margin: 0;
+-    padding: 0;
+-    font-family: Arial, Helvetica, sans-serif;   
+-}
+-
+ #env {
+     position: fixed;
+     top: 0;
+@@ -30,311 +28,324 @@ body{
+     width: 100%;
+     text-align: center;
+     transform: scale(1);
++}
++/* keep the whole world visible beside the sidebar */
++@media (min-width: 761px) {
++    body.panel-open #env { width: calc(100% - var(--sidebar)); }
++}
++#env, #editor-env {
+     image-rendering: -moz-crisp-edges;
+     image-rendering: -webkit-crisp-edges;
+     image-rendering: pixelated;
+     image-rendering: crisp-edges;
+ }
+-
+ #env-canvas {
+     top: 0;
+     left: 0;
+     position: relative;
+ }
+-
+-.control-panel {
+-    height: 300px;
+-    width: 100%;
+-    bottom: 0;
+-    position: fixed;
+-    background-color: var(--border);
+-    display: none;
+-    grid-template-columns: repeat(3, 1fr);
+-    /* opacity: 0.8; */
+-}
+-
+-/* .control-panel:hover {
+-    opacity: 1;
+-} */
+-
+-.control-set {
+-    margin: 5px;
+-    padding: 5px;
+-    border: 10px;
+-    border-radius: 15px;
+-    background-color: var(--panel-bg);
+-    grid-row: 1;
+-}
+-
+-img {
+-    image-rendering: -moz-crisp-edges;
+-    image-rendering: -webkit-crisp-edges;
+-    image-rendering: pixelated;
+-    image-rendering: crisp-edges;
+-    object-fit: cover;
+-    width: 85%;
+-    max-width: 500px;
+-    max-height: 40%;
+-    border-radius: 10px;
+-    overflow: hidden;
+-}
+-
+ button {
+     border: none;
+     color: black;
+     background-color: var(--btn);
+     border-radius: 8px;
+-    padding: 5px 5px;
++    padding: 5px 8px;
+     text-align: center;
+-    text-decoration: none;
+     display: inline-block;
+-    font-size: 16px;
++    font-size: 14px;
+     min-width: 30px;
+     margin: 2px;
++    cursor: pointer;
+ }
+-button:hover{
+-    background-color: var(--btn-hover);
+-}
+-button:active{
+-    background-color: var(--btn-click);
+-}
+-
+-input,select {
++button:hover { background-color: var(--btn-hover); }
++button:active { background-color: var(--btn-click); }
++input, select {
+     border-radius: 5px;
+     border: 2px solid var(--btn);
+     padding: 2px;
+     background-color: white;
+     outline: none;
++    max-width: 150px;
+ }
+-input {
+-    max-width: 100px;
+-}
+-input:hover,input:active {
+-    background-color: rgb(250,250,250);
+-}
++input[type=number] { width: 100px; }
++p { margin: 3px 0; }
++h3, h4 { margin: 6px 0 3px; }
+ 
+-.icon-links {
+-    font-size: 35px;
++/* sidebar */
++.control-panel {
+     position: fixed;
+-    bottom: 10px;
+-    right: 20px;
++    top: 0;
++    right: 0;
++    bottom: 0;
++    width: var(--sidebar);
++    max-width: 100%;
++    display: none;
++    flex-direction: column;
++    gap: 6px;
++    padding: 6px;
++    background-color: var(--border);
++    z-index: 10;
+ }
+-
+-#speed-controller {
+-    grid-column: 1;
++#speed-controller, #tab-container {
++    background-color: var(--panel-bg);
++    border-radius: 12px;
++    padding: 8px;
+ }
+-
+-.vertical-buttons {
+-    float:right;
+-    display: grid;
+-    grid-template-rows: 2;
+-    grid-template-columns: 1;
++.title-row {
++    display: flex;
++    align-items: center;
++    justify-content: space-between;
+ }
+-.editor-buttons {
+-    display: grid;
+-    grid-template-rows: 3;
+-    grid-template-columns: 1;
+-    height: fit-content;
++.title-row img {
++    width: 220px;
++    border-radius: 8px;
++    image-rendering: pixelated;
+ }
+-
+-.col-row-input {
+-    display: none;
++.button-bar {
++    display: flex;
++    flex-wrap: wrap;
+ }
+-
+-#tab-container {
+-    grid-column: 2 / 4;
++.row {
++    display: flex;
++    align-items: center;
++    justify-content: space-between;
++    gap: 8px;
++    margin: 4px 0;
++}
++.row input[type=range] {
++    flex: 1;
++    max-width: none;
++}
++output {
++    min-width: 28px;
++    text-align: right;
++}
++.hint {
++    color: #4a5068;
++    font-size: 12px;
+ }
+-
+ .tabnav {
+-    overflow: hidden;
++    display: flex;
+     background-color: var(--tab);
+-    border-radius: 15px;
++    border-radius: 12px;
++    overflow: hidden;
++    flex-shrink: 0;
+ }
+ .tabnav p {
+-    float: left;
++    flex: 1;
++    margin: 0;
+     color: white;
+     text-align: center;
+-    padding: 14px 16px;
+-    text-decoration: none;
+-    font-size: 18px;
++    padding: 10px 2px;
+     user-select: none;
++    cursor: pointer;
+ }
+ .tabnav p:hover {
+     background-color: var(--btn-hover);
+     color: black;
+ }
+-.tabnav p:active {
+-    background-color: var(--btn-click);
+-    color: white;
+-}
+-.open-tab {
++.tabnav p.open-tab {
+     background-color: var(--tab-active);
+     color: black;
+ }
+-
+-.tab {
+-    grid-template-columns: repeat(2, 1fr);
+-    grid-template-rows: 1;
+-    display: none;
+-    padding: 10px;
++#tab-container {
++    flex: 1;
++    min-height: 0;
+     overflow-y: auto;
+-    height: 100%;
+ }
++.tab { display: none; }
++.tab#about { display: block; }
+ 
+-.tab#about {
+-    display: grid;
++/* collapsible sections */
++details.section {
++    background: #f4f5f9;
++    border-radius: 8px;
++    margin-bottom: 6px;
+ }
+-
+-/* keep the tab inside the 300px panel so it can scroll to the end */
+-#hyperparameters.tab{
+-    height:225px;
+-    box-sizing:border-box;
++details.section > summary {
++    cursor: pointer;
++    font-weight: bold;
++    padding: 7px 9px;
++    border-radius: 8px;
++    background: #c8ccdf;
++    user-select: none;
+ }
+-.season-row{
+-    margin:2px 0;
++details.section > .body { padding: 6px 9px; }
++details.sub > summary {
++    font-weight: normal;
++    background: #dde0ec;
+ }
+ 
+-.left-half {
+-    grid-column: 1;
++.global-mutation-container { display: none; }
++.col-row-input { display: none; }
++.season-row {
++    display: flex;
++    flex-wrap: wrap;
++    align-items: center;
++    gap: 4px;
++    margin: 3px 0;
+ }
+-
+-.right-half {
+-    grid-column: 2;
++.tool-grid {
++    display: grid;
++    grid-template-columns: repeat(4, 1fr);
+ }
+-
+-.global-mutation-container {
+-    display: none;
++.edit-mode-btn {
++    width: 32px;
++    height: 32px;
++}
++.edit-mode-btn.tool {
++    width: auto;
++    height: auto;
++    display: flex;
++    flex-direction: column;
++    align-items: center;
++    gap: 3px;
++    font-size: 12px;
+ }
++.edit-mode-btn.selected { background-color: var(--btn-hover); }
+ 
+-#editor-panel{
++#cell-legend {
+     display: flex;
++    flex-wrap: wrap;
++    gap: 3px;
++    padding: 10px;
++    margin: 8px 0;
++    background-color: #121D29;
++    border-radius: 10px;
+ }
+-.edit-mode-btn {
+-    width: 30px;
+-    height: 30px;
++.cell-legend-type {
++    width: 40px;
++    height: 40px;
+ }
+-.edit-mode-btn.selected {
+-    background-color: var(--btn-hover);
++#video {
++    width: 100%;
++    height: 200px;
++    border: none;
++}
++.icon-links {
++    font-size: 30px;
++    text-align: right;
+ }
+-#clear-walls {
+-    margin-top: 5px;
++#chartContainer {
++    height: 300px;
++    width: 100%;
+ }
+-#brush-size-container {
++
++/* floating creature editor */
++#editor-window {
++    position: fixed;
++    left: 20px;
++    top: 60px;
++    width: 440px;
++    height: 600px;
++    max-width: 100vw;
++    max-height: 100vh;
++    min-width: 300px;
++    min-height: 320px;
++    display: none;
++    flex-direction: column;
++    background: var(--panel-bg);
++    border: 3px solid var(--border);
++    border-radius: 12px;
++    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
++    overflow: hidden;
++    resize: both;
++    z-index: 20;
++}
++#editor-window > header {
+     display: flex;
+     align-items: center;
++    gap: 4px;
++    padding: 4px 6px 4px 10px;
++    background: var(--tab);
++    color: white;
++    cursor: move;
++    user-select: none;
++    touch-action: none;
+ }
+-#organism-options {
+-    display: none;
++#editor-window > header span { flex: 1; }
++#editor-window.collapsed {
++    height: auto !important;
++    min-height: 0;
++    resize: none;
+ }
+-#drop-org {
+-    bottom: 0;
++#editor-window.collapsed #editor-panel { display: none; }
++#editor-panel {
++    flex: 1;
++    min-height: 0;
++    display: flex;
++    flex-direction: column;
++    gap: 4px;
++    padding: 6px;
++}
++.editor-view-controls {
++    display: flex;
++    align-items: center;
++    gap: 6px;
+ }
++.editor-view-controls input[type=number] { width: 65px; }
++.editor-view-controls input[type=range] { flex: 1; }
+ #editor-env {
+-    image-rendering: -moz-crisp-edges;
+-    image-rendering: -webkit-crisp-edges;
+-    image-rendering: pixelated;
+-    image-rendering: crisp-edges;
+-    height: 195px;
+-    width: 195px;
+-    display: block;
++    flex: 1;
++    min-height: 100px;
++    overflow: auto;
++    background: #121D29;
++    border-radius: 6px;
++    display: flex;
++}
++#editor-canvas {
++    margin: auto; /* centres small grids, still scrolls large ones */
++    flex-shrink: 0;
++}
++#editor-info {
++    max-height: 35%;
++    overflow-y: auto;
++    flex-shrink: 0;
+ }
+ #unnatural-org-warning {
+     color: red;
+-    text-align: center;
+-    font-size: 15px;
+-    border-radius: 10px;
++    align-self: center;
++    padding: 3px;
++    border-radius: 8px;
+     border: 2px solid red;
+ }
+-#unnatural-org-warning:hover {
+-    color: darkred;
+-    border: 2px solid darkred;
+-
+-}
+ #cell-selections {
+     display: none;
+-    grid-template-columns: 2;
+-    height: fit-content;
+-    padding: 0;
+-    margin: 0;
+-}
+-#cell-legend {
+-    display: flex;
+-    width: max-content;
+-    padding: 10px;
+-    align-items: center;
+-    background-color: #121D29;
+-    border-radius: 10px;
++    grid-template-columns: repeat(auto-fill, 32px);
++    gap: 3px;
+ }
+ .cell-type {
+     width: 30px;
+     height: 30px;
+     border: solid black;
+     border-width: 2px;
+-    margin: 1px;
+-}
+-.cell-legend-type {
+-    width: 50px;
+-    height: 50px;
+-    margin: 1px;
+-}
+-#editor-mode-cont{
+-    padding-top: 20px;
+-}
+-
+-.challenge-btn {
+-    height: 50px;
+-    margin: 5px;
+-}
+-
+-#chartContainer {
+-    height: 200px; 
+-    width: 100%;
++    cursor: pointer;
+ }
+ 
+ .community-section {
+     position: fixed;
+-    right: 10px;
++    left: 10px;
+     top: 10px;
+ }
+-
+ .hot-controls {
+     position: fixed;
+     bottom: 10px;
+     padding-left: 10px;
+-    /* display: none; */
+ }
+-
+ #headless-notification {
+     display: none;
+     position: fixed;
+     color: white;
+     font-size: 200px;
+     left: 0;
+-    top: 0;
++    top: 40px;
+     padding-left: 10px;
+ }
+-
+-#minimize {
+-    margin: 10px;
+-    float: right;
+-}
+-#maximize-hot-control {
+-    right: 10px;
+-}
+-
+-.grid-size-in {
+-    width: 75px;
+-}
+-
+-#video {
+-    height: 200px;
+-    margin: auto;
+-    margin-bottom: 0;
+-    padding-bottom: 0;
+-}
++#maximize-hot-control { right: 10px; }
+ 
+ .load-panel {
+     width: 800px;
++    max-width: 95%;
+     background-color: var(--panel-bg);
+     position: fixed;
+     display: none;
+@@ -342,49 +353,29 @@ input:hover,input:active {
+     left: 50%;
+     top: 50%;
+     transform: translate(-50%, -50%);
+-
+-    border-style: solid;
+-    border-width: 0px;
+     border-radius: 10px;
+     box-shadow: 0 0 0 10px var(--border);
+-
+     padding: 10px;
++    z-index: 30;
+ }
+-
+-.list-title-container {
+-    flex: 1;
+-}
++.list-title-container { flex: 1; }
+ .list-container {
+     overflow-y: auto;
+     max-height: 200px;
+     margin-right: 5px;
+ }
+-
+ .list-item {
+     cursor: pointer;
+     padding: 5px;
+     border-bottom: 1px solid #ccc;
+     background-color: var(--btn);
+ }
+-.list-item:hover {
+-    background-color: var(--btn-hover);
+-}
+-.list-item:active {
+-    background-color: var(--btn-click);
+-}
+-
++.list-item:hover { background-color: var(--btn-hover); }
++.list-item:active { background-color: var(--btn-click); }
+ .all-list-container {
+     display: flex;
+     width: 100%;
+ }
+-
+-#close-load-btn { 
+-    float: right;
+-}
+-
+-#load-panel-title {
+-    white-space: nowrap;
+-}
+-#load-panel-title * {
+-    display: inline;
+-}
++#close-load-btn { float: right; }
++#load-panel-title { white-space: nowrap; }
++#load-panel-title * { display: inline; }
+diff --git a/dist/index.html b/dist/index.html
+index f7a8d61..ae2623f 100644
+--- a/dist/index.html
++++ b/dist/index.html
+@@ -1,424 +1,297 @@
+ <!DOCTYPE html>
+ <html>
+-	<head>
+-		<meta charset="UTF-8">
+-		<title>The Life Engine</title>
+-		<link rel="icon" href="./img/icon.png">
+-		<link rel="stylesheet" href="./css/style.css">
+-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css">
+-		<script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+-	</head>
+-	<body>
+-		<script src="./js/bundle.js"></script>
+-		
+-		<div id='env'>
+-			<canvas id='env-canvas'></canvas>
+-		</div>
+-		<div class='control-panel'>
+-			<div id='speed-controller' class='control-set'>
+-				<div class='vertical-buttons'>
+-					<button class="reset-view" title="Reset View. Hotkey: A"><i class="fa fa-video-camera"></i></button>
+-					<button class="edit-mode-btn drag-view" id="drag-view" title="Drag View. Hotkey: S"><i class="fa fa-arrows"></i></button>
+-					<button class="edit-mode-btn wall-drop" id="wall-drop" title="Drop/Remove Wall. Hotkey: D"><i class="fa fa-th"></i></button>
+-					<button class="edit-mode-btn food-drop selected" id="food-drop" title="Drop/Remove Food. Hotkey: F"><i class="fa fa-cutlery"></i></button>
+-					<button class="edit-mode-btn click-kill" id="click-kill" title="Click to kill. Hotkey: G"><i class="fa fa-skull"></i></button>
+-				</div>
+-				<img src="./img/title.png" alt="Life Engine">
+-				<h3>Simulation Speed</h3>
+-				<input id="slider" type="range" min="1" max="300" value="60">
+-				<button class='pause-button' title="Play/Pause. Hotkey: Spacebar"><i class="fa fa-pause"></i></button>
+-				<button class="headless" title="Toggle rendering. Hotkey: H"><i class="fa fa-eye-slash"></i></button>
+-				<p id='fps'>Target FPS: 60</p>
+-				<p id='fps-actual'></p>
+-				<button id='reset-env' title='Restarts simulation with default organism.'>Reset</button>
+-				<button id='clear-env' title="Removes all organisms.">Clear</button>
+-				<div id="brush-size-container">
+-					<label id="brush-slider-label" for="brush-slider" title='Size of the brush for food, walls, and killing'><i class="fa fa-brush"></i> Brush Size </label>
+-					<input id="brush-slider" type="range" min="0" max="15" value="2">
+-				</div>
+-			</div>
++<head>
++<meta charset="UTF-8">
++<title>The Life Engine</title>
++<link rel="icon" href="./img/icon.png">
++<link rel="stylesheet" href="./css/style.css">
++<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css">
++<script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
++</head>
++<body class="panel-open">
++<script src="./js/bundle.js"></script>
+ 
+-			<div id='tab-container' class='control-set'>
++<div id="env"><canvas id="env-canvas"></canvas></div>
+ 
+-				<div class="tabnav">
+-					<p class='tabnav-item open-tab' id='about'>About</p>
+-					<p class='tabnav-item' id='editor'>Editor</p>
+-					<p class='tabnav-item' id='world-controls'>World Controls</p>
+-					<p class='tabnav-item' id='hyperparameters'>Evolution Controls</p>
+-					<p class='tabnav-item' id='stats'>Statistics</p>
+-					<button id="minimize" title="Minimze Control Panel."><i class="fa fa-minus-square"></i></button>
+-				</div>
++<aside class="control-panel">
++<div id="speed-controller">
++<div class="title-row"><img src="./img/title.png" alt="Life Engine"><button id="minimize" title="Hide panel (Q)"><i class="fa fa-minus-square"></i></button></div>
++<div class="row"><label for="slider" id="fps">Target FPS: 60</label><input id="slider" type="range" min="1" max="300" value="60"></div>
++<div class="button-bar">
++<button class="pause-button" title="Play/Pause (Space)"><i class="fa fa-pause"></i></button>
++<button class="headless" title="Toggle rendering (H)"><i class="fa fa-eye-slash"></i></button>
++<button class="reset-view" title="Reset view (A)"><i class="fa fa-video-camera"></i></button>
++<button id="reset-env" title="Restart with the default organism">Reset</button>
++<button id="clear-env" title="Remove all organisms">Clear</button>
++<button id="editor" title="Open the creature editor"><i class="fa fa-pen-ruler"></i> Editor</button>
++</div>
++<p id="fps-actual"></p>
++</div>
+ 
+-				<div id='about' class='tab'>
+-					<div class='left-half'>
+-						<h3>The Life Engine</h3>
+-						<p>The Life Engine is a virtual ecosystem that allows organisms to reproduce, compete, and evolve.</p>
+-						<p>Each organism is made up of different colored cells. Hover over each color to learn what it does.</p>
+-						<div id='cell-legend'>
+-							<div class='cell-legend-type' id='mouth' title="Mouth: Eats adjacent food."></div>
+-							<div class='cell-legend-type' id='producer' title="Producer: Produces adjacent food."></div>
+-							<div class='cell-legend-type' id='mover' title="Mover: Allows for movement and rotation."></div>
+-							<div class='cell-legend-type' id='killer' title="Killer: Harms organisms in adjacent cells."></div>
+-							<div class='cell-legend-type' id='armor' title="Armor: Negates affects of killer cell."></div>
+-							<div class='cell-legend-type' id='eye' title="Eye: Observes cells and decides movement."></div>
+-							<div class='cell-legend-type' id='healer' title="Healer: Slowly repairs damage."></div>
+-							<div class='cell-legend-type' id='scavenger' title="Scavenger: Sometimes eats food 2 squares away."></div>
+-							<div class='cell-legend-type' id='parasite' title="Parasite: Steals food from adjacent organisms. Blocked by armor and killer cells."></div>
+-							<div class='cell-legend-type' id='kamikaze' title="Kamikaze: Explodes on death if the organism holds enough food."></div>
+-							<div class='cell-legend-type' id='transporter' title="Transporter: Shares food with adjacent organisms of the same species."></div>
+-							<div class='cell-legend-type' id='food' title="Food: Not part of an organism. Once an organism has eaten enough food, it will reproduce."></div>
+-							<div class='cell-legend-type' id='wall' title="Wall: Not part of an organism. Blocks movement and reproduction."></div>
+-						</div><br>
+-					</div>
+-					<div class='right-half'>
+-						<iframe id="video" src="https://www.youtube.com/embed/iSAKEnRfles"></iframe>
+-					</div>
+-					<div class='icon-links'>
+-						<a href=https://github.com/MaxRobinsonTheGreat/EvolutionSimulatorV2 title='View the code'><i class="fa-brands fa-github"></i></a>
+-						<a href="https://discord.gg/ZsrAAByEnr" title='Join the community'><i class="fa-brands fa-discord"></i></a>
+-						<a href=" https://www.patreon.com/emergentgarden" title='Support the project'><i class="fa-brands fa-patreon"></i></a>
++<nav class="tabnav">
++<p class="tabnav-item open-tab" id="about">About</p>
++<p class="tabnav-item" id="brushes">Brushes</p>
++<p class="tabnav-item" id="world-controls">World</p>
++<p class="tabnav-item" id="hyperparameters">Evolution</p>
++<p class="tabnav-item" id="stats">Stats</p>
++</nav>
+ 
+-					</div>
+-				</div>
++<div id="tab-container">
++<div id="about" class="tab">
++<h3>The Life Engine</h3>
++<p>A virtual ecosystem where organisms reproduce, compete and evolve. Hover over a color to learn what the cell does.</p>
++<div id="cell-legend"><div class="cell-legend-type" id="mouth" title="Mouth: Eats adjacent food."></div><div class="cell-legend-type" id="producer" title="Producer: Produces adjacent food."></div><div class="cell-legend-type" id="mover" title="Mover: Allows for movement and rotation."></div><div class="cell-legend-type" id="killer" title="Killer: Harms organisms in adjacent cells."></div><div class="cell-legend-type" id="armor" title="Armor: Blocks killers and parasites. Wears down under drills."></div><div class="cell-legend-type" id="eye" title="Eye: Observes cells and decides movement. Click a placed eye to rotate it."></div><div class="cell-legend-type" id="healer" title="Healer: Slowly repairs damage."></div><div class="cell-legend-type" id="scavenger" title="Scavenger: Sometimes eats food 2 squares away."></div><div class="cell-legend-type" id="parasite" title="Parasite: Steals food from adjacent organisms."></div><div class="cell-legend-type" id="kamikaze" title="Kamikaze: Explodes on death if the organism holds enough food."></div><div class="cell-legend-type" id="transporter" title="Transporter: Shares food with adjacent organisms of the same species."></div><div class="cell-legend-type" id="drill" title="Drill: Wears down armor, then breaks."></div><div class="cell-legend-type" id="sticky" title="Sticky: Glues touching organisms together."></div><div class="cell-legend-type" id="regrower" title="Regrower: Spends food to regrow lost cells."></div><div class="cell-legend-type" id="food" title="Food: organisms eat it to reproduce."></div><div class="cell-legend-type" id="wall" title="Wall: blocks movement and reproduction."></div></div>
++<iframe id="video" src="https://www.youtube.com/embed/iSAKEnRfles"></iframe>
++<div class="icon-links">
++<a href="https://github.com/MaxRobinsonTheGreat/EvolutionSimulatorV2" title="View the code"><i class="fa-brands fa-github"></i></a>
++<a href="https://discord.gg/ZsrAAByEnr" title="Join the community"><i class="fa-brands fa-discord"></i></a>
++<a href="https://www.patreon.com/emergentgarden" title="Support the project"><i class="fa-brands fa-patreon"></i></a>
++</div>
++</div>
+ 
+-				<div id='editor' class='tab'>
+-					<div class='left-half' id='editor-panel'>
+-						<div class='editor-buttons'>
+-							<button class="edit-mode-btn select" id="select" title="Select organism from world. Hotkey: Z"><i class="fa-regular fa-hand-pointer"></i></button>
+-							<button class="edit-mode-btn edit" id="edit" title="Edit organism. Hotkey: X"><i class="fa fa-pen-to-square"></i></button>
+-							<button class="edit-mode-btn drop-org" id="drop-org" title="Drop organism in world. Hotkey: C"><i class="fa fa-plus"></i></button>
+-							<button id="save-org" title="Save Organism"><i class="fa fa-save"></i></button>
+-							<button id="load-org" title="Load Organism"><i class="fa fa-upload"></i></button>
+-							<button id="reset-with-editor-org" title="Reset Environment with this Organism"><i class="fa fa-seedling"></i></button>
+-							<b id="unnatural-org-warning" title="Unnatural Organism: It has overlapping cells or genetic changes that cannot evolve naturally"><i class="fa fa-biohazard"></i></i></b>
+-						</div>
+-						<div id='editor-env'>
+-							<canvas id='editor-canvas'></canvas>
+-						</div>
+-						<div id='cell-selections'>
+-							<div style='grid-column: 1;'>
+-								<div class='cell-type' id='mouth' title="Mouth: Eats adjacent food."></div>
+-								<div class='cell-type' id='producer' title="Producer: Produces adjacent food."></div>
+-								<div class='cell-type' id='mover' title="Mover: Allows for movement and rotation."></div>
+-								<div class='cell-type' id='parasite' title="Parasite: Steals food from adjacent organisms. Blocked by armor and killer cells."></div>
+-								<div class='cell-type' id='kamikaze' title="Kamikaze: Explodes on death if the organism holds enough food."></div>
+-							</div>
+-							<div style='grid-column: 2;'>
+-								<div class='cell-type' id='killer' title="Killer: Harms organisms in adjacent cells."></div>
+-								<div class='cell-type' id='armor' title="Armor: Negates affects of killer cell."></div>
+-								<div class='cell-type' id='eye' title="Eye: Looks for cells to move away from or towards. Click again on a placed cell to rotate"></div>
+-								<div class='cell-type' id='transporter' title="Transporter: Shares food with adjacent organisms of the same species."></div>
+-								<div class='cell-type' id='healer' title="Healer: Slowly repairs damage."></div>
+-								<div class='cell-type' id='scavenger' title="Scavenger: Sometimes eats food 2 squares away."></div>
+-							</div>
++<div id="brushes" class="tab">
++<details class="section" open><summary>Tools</summary><div class="body">
++<div class="tool-grid">
++<button class="edit-mode-btn tool food-drop selected" id="food-drop" title="Food (F)"><i class="fa fa-cutlery"></i><span>Food</span></button>
++<button class="edit-mode-btn tool wall-drop" id="wall-drop" title="Wall (D)"><i class="fa fa-th"></i><span>Wall</span></button>
++<button class="edit-mode-btn tool click-kill" id="click-kill" title="Kill (G)"><i class="fa fa-skull"></i><span>Kill</span></button>
++<button class="edit-mode-btn tool drag-view" id="drag-view" title="Drag (S)"><i class="fa fa-arrows"></i><span>Drag</span></button>
++</div>
++<p class="hint">Left click paints, right click erases.</p>
++</div></details>
++<details class="section" open><summary>Zone brushes</summary><div class="body">
++<div class="tool-grid">
++<button class="edit-mode-btn tool fertility-up" id="fertility-up" title="Fertility +"><i class="fa fa-leaf"></i><span>Fertility +</span></button>
++<button class="edit-mode-btn tool fertility-down" id="fertility-down" title="Fertility -"><i class="fa fa-leaf"></i><span>Fertility -</span></button>
++<button class="edit-mode-btn tool mutation-up" id="mutation-up" title="Mutation +"><i class="fa fa-dna"></i><span>Mutation +</span></button>
++<button class="edit-mode-btn tool mutation-down" id="mutation-down" title="Mutation -"><i class="fa fa-dna"></i><span>Mutation -</span></button>
++</div>
++<div class="row"><label for="zone-view">Map view</label><select id="zone-view"><option value="off">off</option><option value="fertility">fertility</option><option value="mutation">mutation</option></select></div>
++</div></details>
++<details class="section" open><summary>Brush settings</summary><div class="body">
++<div class="row"><label for="brush-shape">Shape</label><select id="brush-shape"><option value="square">square</option><option value="circle">circle</option></select></div>
++<div class="row"><label for="brush-slider">Size</label><input id="brush-slider" type="range" min="0" max="40" value="2"><output id="brush-slider-value">2</output></div>
++<div class="row"><label for="brush-intensity">Intensity %</label><input id="brush-intensity" type="range" min="1" max="100" value="100"><output id="brush-intensity-value">100</output></div>
++<p class="hint">Intensity is the share of covered squares affected per stroke. For zone brushes it sets the strength of each stroke.</p>
++</div></details>
++</div>
+ 
+-							<button id='clear-editor'>Clear</button>
+-							<button class='randomize-button' id='generate-random' title="Randomizes organism"><i class="fa fa-random"></i></button>
+-							<br>
+-						</div>
+-						
+-					</div>
+-					<div class='right-half'>
+-						<div id='organism-details' style="display:none;">
+-							<h3>Organism Details</h3>
+-							<p class='species-name'>Species Name: </p>
+-							<p class='cell-count'>Cell count: </p>
+-							<p id='move-range'>Move Range: </p>
+-							<p id='mutation-rate'>Mutation Rate: </p>
+-							<br>
+-						
+-							<div class='brain-details'>
+-								<h4>Brain</h4>
+-								<p class='chase-types'>Move Towards: food</p>
+-								<p class='retreat-types'>Move Away From: killer</p>
+-							</div>
+-						</div>
++<div id="world-controls" class="tab">
++<details class="section" open><summary>Grid</summary><div class="body">
++<div class="row" title=""><label for="cell-size">Cell size</label><input type="number" id="cell-size" min="1" max="100" step="1" value="5"></div>
++<div class="row" title=""><label for="fill-window">Fill window</label><input type="checkbox" id="fill-window" checked></div>
++<div class="col-row-input">
++<div class="row"><label for="col-input">Columns</label><input type="number" class="grid-size-in" id="col-input" min="1" value="100"></div>
++<div class="row"><label for="row-input">Rows</label><input type="number" class="grid-size-in" id="row-input" min="1" value="100"></div>
++</div>
++<button id="resize">Resize and reset</button>
++</div></details>
++<details class="section"><summary>Reset options</summary><div class="body">
++<div class="row" title=""><label for="auto-reset">Reset on total extinction</label><input type="checkbox" id="auto-reset" checked></div>
++<div class="row" title="Overrides reset on extinction"><label for="auto-pause">Pause on total extinction</label><input type="checkbox" id="auto-pause"></div>
++<p id="reset-count">Auto reset count: </p>
++<div class="row" title=""><label for="num-random-orgs">Random organisms</label><input type="number" id="num-random-orgs" min="1" step="1" value="100"></div>
++<button class="randomize-button reset-random">Reset with random organisms</button>
++</div></details>
++<details class="section" open><summary>Random seed</summary><div class="body">
++<p id="seed-current"></p>
++<div class="row" title="Whole number from 0 to 4294967295"><label for="sim-seed">Seed</label><input type="number" id="sim-seed" min="0" max="4294967295" step="1" value="0"></div>
++<button id="seed-apply">Use seed and reset</button><button id="seed-random">New random seed</button>
++<p class="hint">Same seed, settings, grid size and starting walls and maps give the same run, as long as you don't intervene. Reset and Clear restart the sequence.</p>
++</div></details>
++<details class="section"><summary>Walls</summary><div class="body">
++<button id="random-walls">Generate random walls</button><button id="clear-walls" title="Hotkey: B">Clear all walls</button>
++<div class="row" title=""><label for="clear-walls-reset">Clear walls on reset</label><input type="checkbox" id="clear-walls-reset"></div>
++<details class="section sub"><summary>Wall noise</summary><div class="body">
++<div class="noise-options" data-noise="walls"></div>
++</div></details>
++</div></details>
++<details class="section"><summary>Save and load</summary><div class="body">
++<div class="row"><label for="save-env-name">File name</label><input type="text" id="save-env-name" value="world"></div>
++<button id="save-env">Save world</button><button id="load-env">Load world</button>
++<div class="row" title=""><label for="override-controls">Load its evolution controls too</label><input type="checkbox" id="override-controls" checked></div>
++</div></details>
++</div>
+ 
+-						<div id='edit-organism-details' style="display:none;">
+-							<h3>Edit Organism</h3>
+-							<div id='species-name-cont'>
+-								<label for="species-name-edit">Species Name:</label>
+-								<input type="text" id="species-name-edit">
+-							</div>
+-							<p class='cell-count'>Cell count: </p>
+-							<div id='move-range-cont'>
+-								<label for="move-range-edit" title='The number of cells to move before randomly changing direction. Overriden by brain decisions.'>Move Range:</label>
+-								<input type="number" id="move-range-edit" min="1" max="100" value=3 step="1">
+-							</div>
+-							<div id='mutation-rate-cont'>
+-								<label for="mutation-rate-edit" title='Probability that offspring of this organism will mutate'>Mutation Rate:</label>
+-								<input type="number" id="mutation-rate-edit" min="1" max="100" value=3 step="1">
+-							</div>
+-							<!-- <br> -->
+-							<div class='brain-details'>
+-								<h4>Brain</h4>
+-								<label for="observation-type-edit">Observation: </label>
+-								<select name="observation-type-edit" id="observation-type-edit">
+-									<option value="food">food</option>
+-									<option value="mouth">mouth</option>
+-									<option value="producer">producer</option>
+-									<option value="mover">mover</option>
+-									<option value="killer">killer</option>
+-									<option value="armor">armor</option>
+-									<option value="eye">eye</option>
+-									<option value="healer">healer</option>
+-									<option value="scavenger">scavenger</option>
+-									<option value="parasite">parasite</option>
+-									<option value="kamikaze">kamikaze</option>
+-									<option value="transporter">transporter</option>
+-								</select>
++<div id="hyperparameters" class="tab">
++<div class="button-bar"><button id="reset-rules">Reset all controls</button><button id="save-controls">Save</button><button id="load-controls">Load</button></div><input id="upload-hyperparams" style="display:none" type="file">
++<details class="section"><summary>Cell rules</summary><div class="body">
++<details class="section sub"><summary>Interactions</summary><div class="body">
++<div class="row" title="Killers, parasites and drills spare their own species"><label for="kin-recognition">Kin recognition</label><input type="checkbox" id="kin-recognition"></div>
++<div class="row" title=""><label for="insta-kill">One touch kill</label><input type="checkbox" id="insta-kill"></div>
++<div class="row" title=""><label for="rot-enabled">Rotation enabled</label><input type="checkbox" id="rot-enabled" checked></div>
++</div></details>
++<details class="section sub"><summary>Producer</summary><div class="body">
++<div class="row" title=""><label for="food-prod-prob">Food probability %</label><input type="number" id="food-prod-prob" min="0" max="100" step="any" value="5"></div>
++<div class="row" title=""><label for="movers-produce">Movers can produce food</label><input type="checkbox" id="movers-produce"></div>
++</div></details>
++<details class="section sub"><summary>Mover</summary><div class="body">
++<div class="row" title=""><label for="extra-mover-cost">Extra reproduction cost</label><input type="number" id="extra-mover-cost" min="0" max="1000" step="1" value="0"></div>
++</div></details>
++<details class="section sub"><summary>Killer</summary><div class="body">
++<p class="hint">One touch kill is under Interactions.</p>
++</div></details>
++<details class="section sub"><summary>Armor</summary><div class="body">
++<div class="row" title="Drill damage an armor cell survives"><label for="armor-durability">Durability</label><input type="number" id="armor-durability" min="1" step="1" value="10"></div>
++</div></details>
++<details class="section sub"><summary>Drill</summary><div class="body">
++<div class="row" title=""><label for="drill-damage">Armor damage per hit</label><input type="number" id="drill-damage" min="0" step="1" value="2"></div>
++<div class="row" title=""><label for="drill-interval">Ticks between hits</label><input type="number" id="drill-interval" min="0" step="1" value="5"></div>
++<div class="row" title=""><label for="drill-break">Damage dealt before breaking</label><input type="number" id="drill-break" min="1" step="1" value="30"></div>
++</div></details>
++<details class="section sub"><summary>Sticky</summary><div class="body">
++<div class="row" title="0 disables gluing"><label for="glue-timeout">Glue lasts (ticks)</label><input type="number" id="glue-timeout" min="0" step="1" value="100"></div>
++<div class="row" title=""><label for="glue-cooldown">Wait before regluing (ticks)</label><input type="number" id="glue-cooldown" min="0" step="1" value="50"></div>
++</div></details>
++<details class="section sub"><summary>Regrower</summary><div class="body">
++<div class="row" title=""><label for="regrow-cost">Food per regrown cell</label><input type="number" id="regrow-cost" min="0" step="1" value="2"></div>
++<div class="row" title=""><label for="regrow-interval">Ticks between regrowths</label><input type="number" id="regrow-interval" min="0" step="1" value="20"></div>
++</div></details>
++<details class="section sub"><summary>Healer</summary><div class="body">
++<div class="row" title=""><label for="heal-prob">Heal probability %</label><input type="number" id="heal-prob" min="0" max="100" step="any" value="5"></div>
++</div></details>
++<details class="section sub"><summary>Scavenger</summary><div class="body">
++<div class="row" title=""><label for="scavenge-prob">Scavenge probability %</label><input type="number" id="scavenge-prob" min="0" max="100" step="any" value="10"></div>
++</div></details>
++<details class="section sub"><summary>Parasite</summary><div class="body">
++<div class="row" title=""><label for="parasite-steal">Steal percentage</label><input type="number" id="parasite-steal" min="0" max="100" step="1" value="50"></div>
++<div class="row" title=""><label for="parasite-cooldown">Timeout (ticks)</label><input type="number" id="parasite-cooldown" min="0" step="1" value="20"></div>
++</div></details>
++<details class="section sub"><summary>Kamikaze</summary><div class="body">
++<div class="row" title=""><label for="kamikaze-range">Blast range</label><input type="number" id="kamikaze-range" min="0" max="20" step="1" value="2"></div>
++</div></details>
++<details class="section sub"><summary>Transporter</summary><div class="body">
++<div class="row" title=""><label for="transport-gap">Age gap (ticks)</label><input type="number" id="transport-gap" min="0" step="1" value="40"></div>
++<div class="row" title=""><label for="transport-amount">Food per transfer</label><input type="number" id="transport-amount" min="1" step="1" value="1"></div>
++</div></details>
++</div></details>
++<details class="section"><summary>Sensing ranges</summary><div class="body">
++<div class="row" title=""><label for="look-range">Eye look range</label><input type="number" id="look-range" min="1" max="200" step="1" value="20"></div>
++<div class="row" title=""><label for="see-through-self">Eyes see through own cells</label><input type="checkbox" id="see-through-self"></div>
++<p class="hint">Blast range is under Cell rules, Kamikaze.</p>
++</div></details>
++<details class="section"><summary>Life and reproduction</summary><div class="body">
++<div class="row" title=""><label for="lifespan-multiplier">Lifespan per cell (ticks)</label><input type="number" id="lifespan-multiplier" min="1" max="10000" step="1" value="100"></div>
++<div class="row" title=""><label for="org-limit">Maximum organisms (-1: none)</label><input type="number" id="org-limit" min="-1" step="1" value="-1"></div>
++<div class="row" title=""><label for="food-blocks">Food blocks reproduction</label><input type="checkbox" id="food-blocks" checked></div>
++</div></details>
++<details class="section"><summary>Food</summary><div class="body">
++<div class="row" title=""><label for="food-drop-rate">Auto food drop rate</label><input type="number" id="food-drop-rate" min="0" max="1000" step="any" value="0"></div>
++<div class="row" title=""><label for="food-rot-enabled">Food rot</label><input type="checkbox" id="food-rot-enabled"></div>
++<div class="row" title=""><label for="food-rot-ticks">Food lasts (ticks)</label><input type="number" id="food-rot-ticks" min="1" step="1" value="500"></div>
++</div></details>
++<details class="section"><summary>Seasons</summary><div class="body">
++<div class="row" title="Replaces the producer food probability"><label for="seasons-enabled">Enable seasons</label><input type="checkbox" id="seasons-enabled"></div>
++<div id="season-list"></div>
++<button id="add-season">Add season</button>
++<div id="season-status"></div>
++</div></details>
++<details class="section"><summary>Mutation</summary><div class="body">
++<div class="row" title=""><label for="evolved-mutation">Use evolved mutation rate</label><input type="checkbox" id="evolved-mutation" checked></div>
++<div class="global-mutation-container">
++<div class="row" title=""><label for="global-mutation">Global mutation rate %</label><input type="number" id="global-mutation" class="global-mutation-in" min="0" max="100" step="1" value="5"></div>
++</div>
++<h4>Mutation type probabilities</h4>
++<div class="row" title=""><label for="add-prob">Add cell</label><input type="number" id="add-prob" class="mut-prob" min="0" max="100" step="1" value="33"></div>
++<div class="row" title=""><label for="change-prob">Change cell</label><input type="number" id="change-prob" class="mut-prob" min="0" max="100" step="1" value="33"></div>
++<div class="row" title=""><label for="remove-prob">Remove cell</label><input type="number" id="remove-prob" class="mut-prob" min="0" max="100" step="1" value="33"></div>
++</div></details>
++<details class="section"><summary>Fertility map</summary><div class="body">
++<div class="row" title=""><label for="fertility-enabled">Enable fertility zones</label><input type="checkbox" id="fertility-enabled"></div>
++<p class="hint">Multiplies producer food probability at the target square (0x to 3x). Paint with the zone brushes.</p>
++<button id="fertility-randomize">Generate from noise</button><button id="fertility-flatten">Flatten</button>
++<div class="noise-options" data-noise="fertility"></div>
++</div></details>
++<details class="section"><summary>Mutation map</summary><div class="body">
++<div class="row" title=""><label for="mutation-zones-enabled">Enable mutation zones</label><input type="checkbox" id="mutation-zones-enabled"></div>
++<p class="hint">Multiplies mutation chance at the parent's position (0x to 5x).</p>
++<button id="mutation-randomize">Generate from noise</button><button id="mutation-flatten">Flatten</button>
++<div class="noise-options" data-noise="mutation"></div>
++</div></details>
++<details class="section"><summary>Meteors</summary><div class="body">
++<div class="row" title=""><label for="meteor-enabled">Random meteors</label><input type="checkbox" id="meteor-enabled"></div>
++<div class="row" title=""><label for="meteor-interval">Average ticks between</label><input type="number" id="meteor-interval" min="1" step="1" value="2000"></div>
++<div class="row" title=""><label for="meteor-radius">Radius</label><input type="number" id="meteor-radius" min="0" step="1" value="10"></div>
++<button id="meteor-now">Strike now</button>
++</div></details>
++</div>
+ 
+-								<label for="reaction-edit">Reaction: </label>
+-								<select name="reaction-edit" id="reaction-edit">
+-									<option value="0">ignore</option>
+-									<option value="1">move away</option>
+-									<option value="2">move towards</option>
+-								</select>
+-								<br>
+-								<p class='chase-types'>Move Towards: food</p>
+-								<p class='retreat-types'>Move Away From: killer</p>
+-							</div>
+-						</div>
+-					</div>
+-				</div>
+-				<div id='world-controls' class='tab'>
+-					<div class='left-half'>
+-						<h3>Grid Size</h3>
+-						<label for="cell-size">Cell Size:</label>
+-						<input type="number" id="cell-size" min="1" max="100" value=5 step="1">
+-						<label for="fill-window">Fill Window</label>
+-						<input type="checkbox" id="fill-window" checked>
+-						<div class='col-row-input'>
+-							<label for="col-input">Columns:</label>
+-							<input type="number" class="grid-size-in" id="col-input" min="1" value=100 step="1">
+-							<label for="row-input">Rows:</label>
+-							<input type="number" class="grid-size-in" id="row-input" min="1" value=100 step="1">
+-						</div>
+-						<button id='resize'>Resize and Reset</button>
+-						<h3>Reset Options</h3>
+-						<label for="auto-reset">Reset on total extinction</label>
+-						<input type="checkbox" id="auto-reset" checked>
+-						<p id='reset-count'>Auto reset count: </p>
+-						<label for="auto-pause" title='Will override reset on extinction'>Pause on total extinction</label>
+-						<input type="checkbox" id="auto-pause">
+-						<br>
+-						<button class='randomize-button reset-random' title="Generate many random organisms in the world.">Reset with Random Organisms</button>
+-						<label for="num-random-orgs" title='Number of random organisms to generate'>Num to generate:</label>
+-						<input type="number" id="num-random-orgs" min="1" value=100 step="1">
+-					</div>
+-					<div class='right-half'>
+-						<br>
+-						<button id='random-walls' title="Generates random walls.">Generate random walls</button> <br>
+-						<button id="clear-walls" title="Clear All Walls. Hotkey: B">Clear all walls</button>
+-						<br>
+-						<label for="clear-walls-reset" title='When on, walls will be cleared when the environment resets'>Clear walls on reset</label>
+-						<input type="checkbox" id="clear-walls-reset">
+-						<br>
+-						<button id='save-env' title="Download save file for entire world">Save World</button>
+-						<label for="save-env-name" title='Save World as:'>Save As:</label>
+-						<input type="text" id="save-env-name" value="world" style="text-align: center;">.json
+-						<br>
+-						<button id='load-env' title="Load world save file">Load World</button>
+-						<label for="override-controls" title='Override the current evolution controls with those from the loaded world'>Override Evolution Controls</label>
+-						<input type="checkbox" id="override-controls" checked>
+-					</div>
+-				</div>
+-				<div id='hyperparameters' class='tab'>
+-					<div class='left-half'>
+-						<h2>Evolution Controls</h2>
+-						<label for="food-prod-prob" title='The probability that a producer cell will produce food each tick.'>Probability of producing food:</label>
+-						<input type="number" id="food-prod-prob" min=".001" max="100" value=4 step="1">
+-						<br>
+-						<label for="scavenge-prob" title='Chance each tick that a scavenger cell eats food 2 squares away.'>Probability of scavenging food:</label>
+-						<input type="number" id="scavenge-prob" min="0" max="100" value="10" step="any">
+-						<br>
+-						<label for="parasite-steal" title="Share of a victim's food taken per steal, rounded up.">Parasite steal percentage:</label>
+-						<input type="number" id="parasite-steal" min="0" max="100" value="50" step="1">
+-						<br>
+-						<label for="parasite-cooldown" title="Ticks a parasite cell waits after stealing.">Parasite timeout (ticks):</label>
+-						<input type="number" id="parasite-cooldown" min="0" max="10000" value="20" step="1">
+-						<br>
+-						<label for="kamikaze-range" title="Blast radius in cells, as a square around each kamikaze cell.">Kamikaze range:</label>
+-						<input type="number" id="kamikaze-range" min="0" max="20" value="2" step="1">
+-						<br>
+-						<label for="lifespan-multiplier" title='An organism lives for this many ticks per cell in its body.'>Lifespan multiplier:</label>
+-						<input type="number" id="lifespan-multiplier" min="1" max="10000" value=100 step="1">
+-						<br>
+-						<label for="rot-enabled" title='Organisms rotate when born and while moving.'>Rotation Enabled</label>
+-						<input type="checkbox" id="rot-enabled" checked>
+-						<br>
+-						<label for="insta-kill" title='When on, killer cells immediately kill organisms they touch. When off, organisms have as much health as they have cells and only take 1 damage from killer cells.'>One touch kill</label>
+-						<input type="checkbox" id="insta-kill">
+-						<br>
+-						<label for="look-range" title='How far an eye cell can see (in number of cells)'>Look range:</label>
+-						<input type="number" id="look-range" min="1" max="50" value=20 step="1">
+-						<br>
+-						<label for="see-through-self" title='Allows eyes to see through an organisms own cells'>See through self:</label>
+-						<input type="checkbox" id="see-through-self">
+-						<br>
+-						<label for="food-drop-rate" title='Rate at which food is automatically generated and dropped in the world'>Auto food drop rate:</label>
+-						<input type="number" id="food-drop-rate" value=0 max="1000">
+-						<br>
+-						<label for="extra-mover-cost" title='Additional food cost for movers to reproduce'>Extra mover reproduction cost:</label>
+-						<input type="number" id="extra-mover-cost" value=0 max="1000" step="1">
+-						<h4>World Rules</h4>
+-						<label for="kin-recognition" title="Killers and parasites spare their own species.">Kin recognition</label>
+-						<input type="checkbox" id="kin-recognition">
+-						<br>
+-						<label for="transport-gap" title="Age difference at which food flows from older to younger.">Transporter age gap (ticks):</label>
+-						<input type="number" id="transport-gap" min="0" value="40" step="1">
+-						<br>
+-						<label for="transport-amount" title="Used by the age and damage rules.">Transporter food per transfer:</label>
+-						<input type="number" id="transport-amount" min="1" value="1" step="1">
+-						<br>
+-						<label for="food-rot-enabled" title="Uneaten food disappears.">Food rot</label>
+-						<input type="checkbox" id="food-rot-enabled">
+-						<br>
+-						<label for="food-rot-ticks" title="Ticks before food rots.">Food lasts (ticks):</label>
+-						<input type="number" id="food-rot-ticks" min="1" value="500" step="1">
+-						<br>
+-						<label for="meteor-enabled" title="Random areas are wiped out.">Meteors</label>
+-						<input type="checkbox" id="meteor-enabled">
+-						<br>
+-						<label for="meteor-interval" title="A strike has a 1 in this many chance each tick.">Average ticks between meteors:</label>
+-						<input type="number" id="meteor-interval" min="1" value="2000" step="1">
+-						<br>
+-						<label for="meteor-radius" title="Radius of the destroyed circle.">Meteor radius:</label>
+-						<input type="number" id="meteor-radius" min="0" value="10" step="1">
+-						<br>
+-						<button id="meteor-now" title="Strike a random area now">Strike now</button>
++<div id="stats" class="tab">
++<p id="org-count">Total Population: </p>
++<p id="species-count">Number of Species: </p>
++<p id="top-species">Most Populous Species: </p>
++<p id="largest-org">Largest Organism Ever: </p>
++<p id="avg-mut">Average Mutation Rate: </p>
++<div class="row"><label for="chart-option">Chart</label><select name="chart-option" id="chart-option">
++<option value="population">Population</option><option value="species">Species</option><option value="structure">Organism Structure</option><option value="mut-rate">Mutation Rate</option></select></div>
++<p id="chart-note"></p>
++<div id="chartContainer"></div>
++</div>
++</div>
++<a id="download-el" style="display:none;"></a>
++</aside>
+ 
+-						
+-					</div>
+-					<div class='right-half'>
+-						<button id='reset-rules'>Reset all controls</button><br>
+-						<label for="org-limit" title='Maximum number of organisms (-1 is unlimited)'>Maximum Organisms:</label>
+-						<input type="number" id="org-limit" min="-1" value=-1 step="1"><br>
+-						<label for="evolved-mutation" title='When on, each organism has its own mutation rate that can increase or decrease. When off, all organisms have the same mutation rate.'>Use evolved mutation rate</label>
+-						<input type="checkbox" id="evolved-mutation" checked>
+-						<div class="global-mutation-container">
+-							<label class="global-mutation-in" for="global-mutation">Global mutation rate: </label>
+-							<input class="global-mutation-in" type="number" id="global-mutation" min="0" max="100" value=5 step="1">
+-						</div>
+-						<h4 title='When an organism mutates, it can choose from one of the following mutation types.'>Mutation Type Probabilities</h4>
+-						<label for="add-prob" title='A new cell will stem from an existing one'>Add Cell:</label>
+-						<input class="mut-prob" type="number" id="add-prob" min="0" max="100" value=33>
+-						<label for="change-prob" title='A currently existing cell will change its color.'>Change Cell:</label>
+-						<input class="mut-prob" type="number" id="change-prob" min="0" max="100" value=33>
+-						<label for="remove-prob" title='An existing cell will be removed.'>Remove Cell:</label>
+-						<input class="mut-prob" type="number" id="remove-prob" min="0" max="100" value=33>
+-						<br/>
+-						<label for="movers-produce" title='When on, movers can produce food from producer cells. When off, producer cells are disabled on mover organisms.'>Movers can produce food</label>
+-						<input type="checkbox" id="movers-produce">
+-						<br/>
+-						<label for="food-blocks" title='When on, reproduction will fail if offspring intersect with food. When off, offspring will remove blocking food.'>Food blocks reproduction</label>
+-						<input type="checkbox" id="food-blocks" checked>
+-						<br>
+-						<button id='save-controls' title="Save all Evolution Controls in a .json file">Save & Download</button>
+-						<button id='load-controls' title="Load saved Evolution Controls with a .json file">Load</button>
+-						<a id="download-el" style="display: none;"></a>
+-						<input id="upload-hyperparams" style="display: none;" type="file">
+-						<h4>Seasons</h4>
+-						<label for="seasons-enabled" title="Seasons cycle in order and replace the food production probability.">Enable seasons</label>
+-						<input type="checkbox" id="seasons-enabled">
+-						<br>
+-						<div id="season-list"></div>
+-						<button id="add-season">Add season</button>
+-						<div id="season-status"></div>
+-						<h4>Zones</h4>
+-						<label for="zone-view">Map view:</label>
+-						<select id="zone-view">
+-						<option value="off">off</option>
+-						<option value="fertility">fertility</option>
+-						<option value="mutation">mutation</option>
+-						</select>
+-						<br>
+-						<label for="fertility-enabled" title="Multiplies producer food probability by the value at the target square.">Fertility zones</label>
+-						<input type="checkbox" id="fertility-enabled">
+-						<br>
+-						<button class="edit-mode-btn fertility-up" id="fertility-up" title="Increase fertility (brush)">F+</button>
+-						<button class="edit-mode-btn fertility-down" id="fertility-down" title="Decrease fertility (brush)">F-</button>
+-						<button id="fertility-randomize">Randomize</button>
+-						<button id="fertility-flatten">Flatten</button>
+-						<br>
+-						<label for="mutation-zones-enabled" title="Multiplies mutation chance by the value at the parent's centre.">Mutation zones</label>
+-						<input type="checkbox" id="mutation-zones-enabled">
+-						<br>
+-						<button class="edit-mode-btn mutation-up" id="mutation-up" title="Increase mutation (brush)">M+</button>
+-						<button class="edit-mode-btn mutation-down" id="mutation-down" title="Decrease mutation (brush)">M-</button>
+-						<button id="mutation-randomize">Randomize</button>
+-						<button id="mutation-flatten">Flatten</button>
+-						<br>
+-					</div>
+-				</div>
+-				<div id='stats' class='tab'>
+-					<div class='left-half'>
+-						<h2>Statistics</h2>
+-						<p id='org-count'>Total Population: </p>
+-						<p id='species-count'>Number of Species: </p>
+-						<p id='top-species'>Most Populous Species: </p>
+-						<p id='largest-org'>Largest Organism Ever: </p>
+-						<p id='avg-mut'>Average Mutation Rate: </p>
+-						<label for="chart-option">Chart: </label>
+-						<select name="chart-option" id="chart-option">
+-							<option value="population">Population</option>
+-							<option value="species">Species</option>
+-							<option value="mut-rate">Organism Structure</option>
+-							<option value="mut-rate">Mutation Rate</option>
+-						</select>
+-						<p id='chart-note'></p>
+-					</div>
+-					<div class='right-half'>
+-						<div id="chartContainer"></div>
+-					</div>
+-				</div>
+-			</div>
+-		</div>
+-		<div class='load-panel'>
+-			<div class="load-panel-title">
+-				<button id='close-load-btn'><i class="fa fa-times"></i></button>
+-				<h1>Community Creations</h1>
+-			</div><br>
+-			<div class="all-list-container">
+-				<div class="list-title-container">
+-					<h2>🌍Worlds</h2>
+-					<div id="worlds-list-container" class="list-container">
+-						<ul id="worlds-list"></ul>
+-					</div>
+-				</div>
+-				<div class="list-title-container">
+-					<h2>🦠Organisms</h2>
+-					<div id="organisms-list-container" class="list-container">
+-						<ul id="organisms-list"></ul>
+-					</div>
+-				</div>
+-				<div class="list-title-container">
+-					<h2>🔧Mods</h2>
+-					<div id="mods-list-container" class="list-container">
+-						<ul id="mods-list"></ul>
+-					</div>
+-				</div>
+-			</div>
+-			<input id="upload-json" style="display: none;" type="file">
+-		</div>
+-		<div class='community-section'>
+-			<button id="community-creations-btn" title="See worlds and organisms made by the community">Community Creations <i class="fa fa-users"></i></button>
+-		</div>
+-		<div class='hot-controls'>
+-			<button class="reset-view" title="Reset View. Hotkey: A"><i class="fa fa-video-camera"></i></button>
+-			<button class="edit-mode-btn drag-view" id="drag-view" title="Drag View. Hotkey: S"><i class="fa fa-arrows"></i></button>
+-			<button class="edit-mode-btn wall-drop" id="wall-drop" title="Drop/Remove Wall. Hotkey: D"><i class="fa fa-th"></i></button>
+-			<button class="edit-mode-btn food-drop selected" id="food-drop" title="Drop/Remove Food. Hotkey: F"><i class="fa fa-cutlery"></i></button>
+-			<button class="edit-mode-btn click-kill" id="click-kill" title="Click to kill. Hotkey: G"><i class="fa fa-skull"></i></button>
+-			<button class="headless" title="Toggle rendering. Hotkey: H"><i class="fa fa-eye-slash"></i></button>
+-			<button class='pause-button' title="Play/Pause. Hotkey: Spacebar"><i class="fa fa-pause"></i></button>
+-		</div>
+-		<div id="headless-notification">
+-			<i class="fa fa-eye-slash" ></i>
+-		</div>
+-		<div id='maximize-hot-control' class='hot-controls'>
+-			<button id="maximize" title="Show Control Panel."><i class="fa fa-plus-square"></i></button>
+-		</div>
+-		
+-	</body>
++<section id="editor-window">
++<header><span><i class="fa fa-pen-ruler"></i> Creature Editor</span><button id="editor-collapse" title="Collapse"><i class="fa fa-chevron-up"></i></button><button id="editor-close" title="Close"><i class="fa fa-times"></i></button></header>
++<div id="editor-panel">
++<div class="editor-buttons">
++<button class="edit-mode-btn select" id="select" title="Select organism from world (Z)"><i class="fa-regular fa-hand-pointer"></i></button>
++<button class="edit-mode-btn edit" id="edit" title="Edit organism (X)"><i class="fa fa-pen-to-square"></i></button>
++<button class="edit-mode-btn drop-org" id="drop-org" title="Drop organism in world (C)"><i class="fa fa-plus"></i></button>
++<button id="save-org" title="Save organism"><i class="fa fa-save"></i></button>
++<button id="load-org" title="Load organism"><i class="fa fa-upload"></i></button>
++<button id="reset-with-editor-org" title="Reset world with this organism"><i class="fa fa-seedling"></i></button>
++<button id="clear-editor">Clear</button>
++<button class="randomize-button" id="generate-random" title="Randomize organism"><i class="fa fa-random"></i></button>
++<b id="unnatural-org-warning" title="Unnatural organism: it has overlapping cells or genetic changes that cannot evolve naturally"><i class="fa fa-biohazard"></i></b>
++</div>
++<div class="editor-view-controls">
++<label for="editor-grid-size" title="Width and height of the drawing grid">Grid</label><input type="number" id="editor-grid-size" min="5" max="201" step="2" value="15">
++<label for="editor-zoom">Zoom</label><input type="range" id="editor-zoom" min="3" max="30" value="13">
++<button id="editor-fit" title="Zoom so the whole grid is visible">Fit</button>
++</div>
++<div id="cell-selections"><div class="cell-type" id="mouth" title="Mouth: Eats adjacent food."></div><div class="cell-type" id="producer" title="Producer: Produces adjacent food."></div><div class="cell-type" id="mover" title="Mover: Allows for movement and rotation."></div><div class="cell-type" id="killer" title="Killer: Harms organisms in adjacent cells."></div><div class="cell-type" id="armor" title="Armor: Blocks killers and parasites. Wears down under drills."></div><div class="cell-type" id="eye" title="Eye: Observes cells and decides movement. Click a placed eye to rotate it."></div><div class="cell-type" id="healer" title="Healer: Slowly repairs damage."></div><div class="cell-type" id="scavenger" title="Scavenger: Sometimes eats food 2 squares away."></div><div class="cell-type" id="parasite" title="Parasite: Steals food from adjacent organisms."></div><div class="cell-type" id="kamikaze" title="Kamikaze: Explodes on death if the organism holds enough food."></div><div class="cell-type" id="transporter" title="Transporter: Shares food with adjacent organisms of the same species."></div><div class="cell-type" id="drill" title="Drill: Wears down armor, then breaks."></div><div class="cell-type" id="sticky" title="Sticky: Glues touching organisms together."></div><div class="cell-type" id="regrower" title="Regrower: Spends food to regrow lost cells."></div></div>
++<div id="editor-env"><canvas id="editor-canvas"></canvas></div>
++<div id="editor-info">
++<div id="organism-details" style="display:none;">
++<h4>Organism details</h4>
++<p class="species-name">Species Name: </p>
++<p class="cell-count">Cell count: </p>
++<p id="move-range">Move Range: </p>
++<p id="mutation-rate">Mutation Rate: </p>
++<div class="brain-details"><h4>Brain</h4><p class="chase-types">Move Towards: food</p><p class="retreat-types">Move Away From: killer</p></div>
++</div>
++<div id="edit-organism-details" style="display:none;">
++<div id="species-name-cont" class="row"><label for="species-name-edit">Species name</label><input type="text" id="species-name-edit"></div>
++<p class="cell-count">Cell count: </p>
++<div id="move-range-cont"><label for="move-range-edit" title="Cells moved before randomly changing direction. Brain decisions override it.">Move range</label> <input type="number" id="move-range-edit" min="1" max="100" value="3"></div>
++<div id="mutation-rate-cont"><label for="mutation-rate-edit" title="Probability that offspring will mutate">Mutation rate</label> <input type="number" id="mutation-rate-edit" min="1" max="100" value="3"></div>
++<div class="brain-details"><h4>Brain</h4>
++<div class="row"><label for="observation-type-edit">Observation</label><select id="observation-type-edit"><option value="food">food</option><option value="mouth">mouth</option><option value="producer">producer</option><option value="mover">mover</option><option value="killer">killer</option><option value="armor">armor</option><option value="eye">eye</option><option value="healer">healer</option><option value="scavenger">scavenger</option><option value="parasite">parasite</option><option value="kamikaze">kamikaze</option><option value="transporter">transporter</option><option value="drill">drill</option><option value="sticky">sticky</option><option value="regrower">regrower</option></select></div>
++<div class="row"><label for="reaction-edit">Reaction</label><select id="reaction-edit"><option value="0">ignore</option><option value="1">move away</option><option value="2">move towards</option></select></div>
++<p class="chase-types">Move Towards: food</p><p class="retreat-types">Move Away From: killer</p></div>
++</div>
++</div>
++</div>
++</section>
++
++<div class="load-panel">
++<div class="load-panel-title"><button id="close-load-btn"><i class="fa fa-times"></i></button><h1>Community Creations</h1></div><br>
++<div class="all-list-container">
++<div class="list-title-container"><h2>🌍Worlds</h2><div id="worlds-list-container" class="list-container"><ul id="worlds-list"></ul></div></div>
++<div class="list-title-container"><h2>🦠Organisms</h2><div id="organisms-list-container" class="list-container"><ul id="organisms-list"></ul></div></div>
++<div class="list-title-container"><h2>🔧Mods</h2><div id="mods-list-container" class="list-container"><ul id="mods-list"></ul></div></div>
++</div>
++<input id="upload-json" style="display:none;" type="file">
++</div>
++<div class="community-section"><button id="community-creations-btn" title="See worlds and organisms made by the community">Community Creations <i class="fa fa-users"></i></button></div>
++<div class="hot-controls">
++<button class="reset-view" title="Reset view (A)"><i class="fa fa-video-camera"></i></button>
++<button class="edit-mode-btn drag-view" id="drag-view" title="Drag view (S)"><i class="fa fa-arrows"></i></button><button class="edit-mode-btn wall-drop" id="wall-drop" title="Wall (D)"><i class="fa fa-th"></i></button><button class="edit-mode-btn food-drop selected" id="food-drop" title="Food (F)"><i class="fa fa-cutlery"></i></button><button class="edit-mode-btn click-kill" id="click-kill" title="Kill (G)"><i class="fa fa-skull"></i></button>
++<button class="headless" title="Toggle rendering (H)"><i class="fa fa-eye-slash"></i></button>
++<button class="pause-button" title="Play/Pause (Space)"><i class="fa fa-pause"></i></button>
++</div>
++<div id="headless-notification"><i class="fa fa-eye-slash"></i></div>
++<div id="maximize-hot-control" class="hot-controls"><button id="maximize" title="Show panel (Q)"><i class="fa fa-plus-square"></i></button></div>
++</body>
+ </html>
+diff --git a/src/Controllers/ControlPanel.js b/src/Controllers/ControlPanel.js
+index 87cf5f4..79a6fec 100644
+--- a/src/Controllers/ControlPanel.js
++++ b/src/Controllers/ControlPanel.js
+@@ -4,6 +4,8 @@ const StatsPanel = require("../Stats/StatsPanel");
+ const WorldConfig = require("../WorldConfig");
+ const LoadController = require("./LoadController");
+ const RulesPanel=require("./RulesPanel");
++const SetupPanel=require("./SetupPanel");
++const FloatingWindow=require("./FloatingWindow");
+ 
+ class ControlPanel {
+     constructor(engine) {
+@@ -26,20 +28,45 @@ class ControlPanel {
+         this.opacity_change_rate = -0.8;
+         this.paused=false;
+         this.setHyperparamDefaults();
++        SetupPanel.init(this);
++        this.defineEditorWindow();
+         LoadController.control_panel = this;
++        $('#maximize').click(); //the sidebar starts open
++    }
++
++    defineEditorWindow(){
++        const editor=this.engine.organism_editor;
++        editor.is_active=false;
++        FloatingWindow.init(active=>{
++            editor.is_active=active;
++            if(active){
++                this.editor_controller.refreshDetailsPanel();
++                editor.renderFull();
++            }
++        });
++        $('#editor').click(()=>FloatingWindow.open());
++        $('#editor-grid-size').change(function(){
++            editor.setGrid(parseInt(this.value)||editor.grid_size,editor.cell_size);
++        });
++        $('#editor-zoom').on('input',function(){
++            editor.setGrid(editor.grid_size,parseInt(this.value));
++        });
++        $('#editor-fit').click(()=>editor.zoomToFit());
+     }
+ 
+     defineMinMaxControls(){
+         this.control_panel_active = false;
+         this.no_hud = false;
+         $('#minimize').click ( () => {
++            $('body').removeClass('panel-open');
+             $('.control-panel').css('display', 'none');
+             $('.hot-controls').css('display', 'block');
+             this.control_panel_active = false;
+             this.stats_panel.stopAutoRender();
+         });
+         $('#maximize').click ( () => {
+-            $('.control-panel').css('display', 'grid');
++            $('body').addClass('panel-open');
++            $('.control-panel').css('display', 'flex');
+             $('.hot-controls').css('display', 'none');
+             this.control_panel_active = true;
+             if (this.tab_id == 'stats') {
+@@ -51,7 +78,8 @@ class ControlPanel {
+     defineHotkeys() {
+         $('body').keydown( (e) => {
+             let focused = document.activeElement;
+-            if (focused.tagName === "INPUT" && focused.type === "text") return;
++            if (focused.tagName === "INPUT" && (focused.type === "text" || focused.type === "number")) return;
++            if (e.ctrlKey || e.metaKey || e.altKey) return;
+             switch (e.key.toLowerCase()) {
+                 // hot bar controls
+                 case 'a':
+@@ -96,7 +124,7 @@ class ControlPanel {
+                     break;
+                 case 'v': // toggle hud
+                     if (this.no_hud) {
+-                        let control_panel_display = this.control_panel_active ? 'grid' : 'none';
++                        let control_panel_display = this.control_panel_active ? 'flex' : 'none';
+                         let hot_control_display = !this.control_panel_active ? 'block' : 'none';
+                         if (this.control_panel_active && this.tab_id == 'stats') {
+                             this.stats_panel.startAutoRender();
+@@ -104,11 +132,13 @@ class ControlPanel {
+                         $('.control-panel').css('display', control_panel_display);
+                         $('.hot-controls').css('display', hot_control_display);
+                         $('.community-section').css('display', 'block');
++                        $('#editor-window').css('visibility','visible');
+                     }
+                     else {
+                         $('.control-panel').css('display', 'none');
+                         $('.hot-controls').css('display', 'none');
+                         $('.community-section').css('display', 'none');
++                        $('#editor-window').css('visibility','hidden');
+                         LoadController.close();
+                     }
+                     this.no_hud = !this.no_hud;
+@@ -157,17 +187,13 @@ class ControlPanel {
+         $('.tabnav-item').click(function() {
+             $('.tab').css('display', 'none');
+             var tab = '#'+this.id+'.tab';
+-            $(tab).css('display', 'grid');
++            $(tab).css('display', 'block');
+             $('.tabnav-item').removeClass('open-tab')
+             $('#'+this.id+'.tabnav-item').addClass('open-tab');
+-            self.engine.organism_editor.is_active = (this.id == 'editor');
+             self.stats_panel.stopAutoRender();
+             if (this.id === 'stats') {
+                 self.stats_panel.startAutoRender();
+             }
+-            else if (this.id === 'editor') {
+-                self.editor_controller.refreshDetailsPanel();
+-            }
+             self.tab_id = this.id;
+         });
+     }
+@@ -268,18 +294,6 @@ class ControlPanel {
+         $('#food-prod-prob').change(function() {
+             Hyperparams.foodProdProb = $('#food-prod-prob').val();
+         }.bind(this));
+-        $('#scavenge-prob').change(function() {
+-            Hyperparams.scavengeProb=parseFloat($('#scavenge-prob').val());
+-        });
+-        $('#parasite-steal').change(function() {
+-            Hyperparams.parasiteStealPercent=parseInt($('#parasite-steal').val())||0;
+-        });
+-        $('#parasite-cooldown').change(function() {
+-            Hyperparams.parasiteCooldown=parseInt($('#parasite-cooldown').val())||0;
+-        });
+-        $('#kamikaze-range').change(function() {
+-            Hyperparams.kamikazeRange=parseInt($('#kamikaze-range').val())||0;
+-        });
+         $('#lifespan-multiplier').change(function() {
+             Hyperparams.lifespanMultiplier = $('#lifespan-multiplier').val();
+         }.bind(this));
+@@ -378,10 +392,6 @@ class ControlPanel {
+     updateHyperparamUIValues(){
+         RulesPanel.refresh();
+         $('#food-prod-prob').val(Hyperparams.foodProdProb);
+-        $('#scavenge-prob').val(Hyperparams.scavengeProb);
+-        $('#parasite-steal').val(Hyperparams.parasiteStealPercent);
+-        $('#parasite-cooldown').val(Hyperparams.parasiteCooldown);
+-        $('#kamikaze-range').val(Hyperparams.kamikazeRange);
+         $('#lifespan-multiplier').val(Hyperparams.lifespanMultiplier);
+         $('#rot-enabled').prop('checked', Hyperparams.rotationEnabled);
+         $('#insta-kill').prop('checked', Hyperparams.instaKill);
+@@ -468,9 +478,13 @@ class ControlPanel {
+             env.reset(true, false);
+             this.stats_panel.reset();
+         });
+-        $('#brush-slider').on('input change', function () {
+-            WorldConfig.brush_size = this.value;
++        const bind=(id,key,parse)=>$('#'+id).on('input change',function(){
++            WorldConfig[key]=parse(this.value);
++            $('#'+id+'-value').text(this.value);
+         });
++        bind('brush-slider','brush_size',Number);
++        bind('brush-intensity','brush_intensity',Number);
++        bind('brush-shape','brush_shape',String);
+         $('#random-walls').click( function() {
+             this.env_controller.randomizeWalls();
+         }.bind(this));
+@@ -516,6 +530,8 @@ class ControlPanel {
+     }
+ 
+     setMode(mode) {
++        if(mode==Modes.Edit||mode==Modes.Select)
++            FloatingWindow.open();
+         this.env_controller.mode = mode;
+         this.editor_controller.mode = mode;
+ 
+@@ -561,6 +577,7 @@ class ControlPanel {
+         $('#reset-count').text("Auto reset count: " + this.engine.env.reset_count);
+         this.stats_panel.updateDetails();
+         RulesPanel.updateStatus();
++        SetupPanel.updateStatus();
+         if (WorldConfig.headless)
+             this.updateHeadlessIcon(delta_time);
+ 
+diff --git a/src/Controllers/EditorController.js b/src/Controllers/EditorController.js
+index 406457b..87fcc4b 100644
+--- a/src/Controllers/EditorController.js
++++ b/src/Controllers/EditorController.js
+@@ -101,6 +101,15 @@ class EditorController extends CanvasController{
+                 case "transporter":
+                     self.edit_cell_type=CellStates.transporter;
+                     break;
++                case "drill":
++                    self.edit_cell_type=CellStates.drill;
++                    break;
++                case "sticky":
++                    self.edit_cell_type=CellStates.sticky;
++                    break;
++                case "regrower":
++                    self.edit_cell_type=CellStates.regrower;
++                    break;
+             }
+             $(".cell-type" ).css( "border-color", "black" );
+             var selected = '#'+this.id+'.cell-type';
+@@ -158,14 +167,12 @@ class EditorController extends CanvasController{
+     }
+ 
+     loadOrg(org) {
+-        this.env.clear();
+         this.env.organism.loadRaw(org);
+-        this.refreshDetailsPanel();
+-        this.env.organism.updateGrid();
+-        this.env.renderFull();
+         this.env.organism.species = new Species(this.env.organism.anatomy, null, 0);
+         if (org.species_name)
+             this.env.organism.species.name = org.species_name;
++        this.env.showOrganism();
++        this.refreshDetailsPanel();
+         if (this.mode === Modes.Clone)
+             $('#drop-org').click();
+     }
+diff --git a/src/Controllers/EnvironmentController.js b/src/Controllers/EnvironmentController.js
+index 0aa2760..1bcb282 100644
+--- a/src/Controllers/EnvironmentController.js
++++ b/src/Controllers/EnvironmentController.js
+@@ -5,7 +5,6 @@ const CellStates = require("../Organism/Cell/CellStates");
+ const Neighbors = require("../Grid/Neighbors");
+ const FossilRecord = require("../Stats/FossilRecord");
+ const WorldConfig = require("../WorldConfig");
+-const Perlin = require("../Utils/Perlin");
+ const ZoneMaps=require("../Grid/ZoneMaps");
+ 
+ class EnvironmentController extends CanvasController{
+@@ -58,28 +57,30 @@ class EnvironmentController extends CanvasController{
+     /*
+     Iterate over grid from 0,0 to env.num_cols,env.num_rows and create random walls using perlin noise to create a more organic shape.
+     */
+-    randomizeWalls(thickness=1) {
++    randomizeWalls() {
+         this.env.clearWalls();
+-        const noise_threshold = -0.017;
+-        let avg_noise = 0;
+-        let resolution = 20;
+-        Perlin.seed();
+-
+-        for (let r = 0; r < this.env.num_rows; r++) {
+-            for (let c = 0; c < this.env.num_cols; c++) {
+-                let xval = c/this.env.num_cols*(resolution/this.env.renderer.cell_size*(this.env.num_cols/this.env.num_rows));
+-                let yval = r/this.env.num_rows*(resolution/this.env.renderer.cell_size*(this.env.num_rows/this.env.num_cols));
+-                let noise = Perlin.get(xval, yval);
+-                avg_noise += noise/(this.env.num_rows*this.env.num_cols);
+-                if (noise > noise_threshold && noise < noise_threshold + thickness/resolution) {
+-                    let cell = this.env.grid_map.cellAt(c, r);
+-                    if (cell != null) {
+-                        if(cell.owner != null) cell.owner.die();
+-                        this.env.changeCell(c, r, CellStates.wall, null);
+-                    }
+-                }
++        const settings=WorldConfig.noise.walls;
++        const {threshold,thickness}=settings;
++        ZoneMaps.forEachNoise(this.env.grid_map,settings,(cell,noise)=>{
++            if(noise>threshold&&noise<threshold+thickness){
++                if(cell.owner!=null) cell.owner.die();
++                this.env.changeCell(cell.col,cell.row,CellStates.wall,null);
+             }
+-        }
++        });
++    }
++
++    //offsets covered by the brush
++    brushOffsets(){
++        const radius=Number(WorldConfig.brush_size);
++        const square=Neighbors.inRange(radius);
++        if(WorldConfig.brush_shape!='circle')
++            return square;
++        return square.filter(([x,y])=>x*x+y*y<=radius*(radius+1));
++    }
++
++    //intensity is the share of covered cells that get affected
++    brushHit(){
++        return Math.random()*100<WorldConfig.brush_intensity;
+     }
+ 
+     updateMouseLocation(offsetX, offsetY){
+@@ -174,7 +175,8 @@ class EnvironmentController extends CanvasController{
+     }
+ 
+     paintZone(center,key,delta){
+-        for(const [dc,dr] of Neighbors.inRange(WorldConfig.brush_size)){
++        delta*=WorldConfig.brush_intensity/100;
++        for(const [dc,dr] of this.brushOffsets()){
+             const cell=this.env.grid_map.cellAt(center.col+dc,center.row+dr);
+             if(cell==null)
+                 continue;
+@@ -216,7 +218,9 @@ class EnvironmentController extends CanvasController{
+     }
+ 
+     dropCellType(col, row, state, killBlocking=false, ignoreState=null) {
+-        for (var loc of Neighbors.inRange(WorldConfig.brush_size)){
++        for (var loc of this.brushOffsets()){
++            if(!this.brushHit())
++                continue;
+             var c=col + loc[0];
+             var r=row + loc[1];
+             var cell = this.env.grid_map.cellAt(c, r);
+@@ -237,7 +241,7 @@ class EnvironmentController extends CanvasController{
+     findNearOrganism() {
+         let closest = null;
+         let closest_dist = 100;
+-        for (let loc of Neighbors.inRange(WorldConfig.brush_size)){
++        for (let loc of this.brushOffsets()){
+             let c = this.cur_cell.col + loc[0];
+             let r = this.cur_cell.row + loc[1];
+             let cell = this.env.grid_map.cellAt(c, r);
+@@ -253,7 +257,9 @@ class EnvironmentController extends CanvasController{
+     }
+ 
+     killNearOrganisms() {
+-        for (var loc of Neighbors.inRange(WorldConfig.brush_size)){
++        for (var loc of this.brushOffsets()){
++            if(!this.brushHit())
++                continue;
+             var c = this.cur_cell.col + loc[0];
+             var r = this.cur_cell.row + loc[1];
+             var cell = this.env.grid_map.cellAt(c, r);
+diff --git a/src/Controllers/FloatingWindow.js b/src/Controllers/FloatingWindow.js
+new file mode 100644
+index 0000000..e61a905
+--- /dev/null
++++ b/src/Controllers/FloatingWindow.js
+@@ -0,0 +1,64 @@
++//the draggable, resizable, collapsible creature editor card
++const FloatingWindow={
++    init(onChange){
++        this.onChange=onChange;
++        this.element=document.getElementById('editor-window');
++        const header=this.element.querySelector('header');
++        let grab=null;
++        header.addEventListener('pointerdown',e=>{
++            if(e.target.closest('button'))
++                return;
++            const box=this.element.getBoundingClientRect();
++            grab=[e.clientX-box.left,e.clientY-box.top];
++            header.setPointerCapture(e.pointerId);
++        });
++        header.addEventListener('pointermove',e=>{
++            if(grab)
++                this.moveTo(e.clientX-grab[0],e.clientY-grab[1]);
++        });
++        const release=()=>grab=null;
++        header.addEventListener('pointerup',release);
++        header.addEventListener('pointercancel',release);
++        window.addEventListener('resize',()=>{
++            if(this.isOpen())
++                this.moveTo(this.element.offsetLeft,this.element.offsetTop);
++        });
++        $('#editor-collapse').click(()=>{
++            $(this.element).toggleClass('collapsed');
++            $('#editor-collapse i').toggleClass('fa-chevron-up fa-chevron-down');
++            this.onChange(this.isActive());
++        });
++        $('#editor-close').click(()=>this.close());
++    },
++
++    //keeps the header reachable
++    moveTo(x,y){
++        const width=this.element.offsetWidth;
++        this.element.style.left=Math.max(80-width,Math.min(x,window.innerWidth-80))+'px';
++        this.element.style.top=Math.max(0,Math.min(y,window.innerHeight-40))+'px';
++    },
++
++    isOpen(){
++        return this.element.style.display=='flex';
++    },
++
++    isActive(){
++        return this.isOpen()&&!this.element.classList.contains('collapsed');
++    },
++
++    open(){
++        const was_active=this.isActive();
++        this.element.style.display='flex';
++        if(this.element.classList.contains('collapsed'))
++            $('#editor-collapse').click();
++        else if(!was_active)
++            this.onChange(true);
++    },
++
++    close(){
++        this.element.style.display='none';
++        this.onChange(false);
++    },
++}
++
++module.exports=FloatingWindow;
+diff --git a/src/Controllers/RulesPanel.js b/src/Controllers/RulesPanel.js
+index 837ac3f..3bb02e6 100644
+--- a/src/Controllers/RulesPanel.js
++++ b/src/Controllers/RulesPanel.js
+@@ -18,6 +18,19 @@ const NUMBERS={
+     'food-rot-ticks':['foodRotTicks',1],
+     'meteor-interval':['meteorInterval',1],
+     'meteor-radius':['meteorRadius',0],
++    'armor-durability':['armorDurability',1],
++    'drill-damage':['drillDamage',0],
++    'drill-interval':['drillInterval',0],
++    'drill-break':['drillBreakDamage',1],
++    'glue-timeout':['glueTimeout',0],
++    'glue-cooldown':['glueCooldown',0],
++    'regrow-cost':['regrowCost',0],
++    'regrow-interval':['regrowInterval',0],
++    'parasite-steal':['parasiteStealPercent',0,100],
++    'parasite-cooldown':['parasiteCooldown',0],
++    'kamikaze-range':['kamikazeRange',0,20],
++    'heal-prob':['healProb',0,100,true],
++    'scavenge-prob':['scavengeProb',0,100,true],
+ };
+ 
+ //UI for the world rules in Evolution Controls
+@@ -29,11 +42,11 @@ const RulesPanel={
+                 Hyperparams[key]=this.checked;
+             });
+         }
+-        for(const [id,[key,min]] of Object.entries(NUMBERS)){
++        for(const [id,[key,min,max=Infinity,decimal]] of Object.entries(NUMBERS)){
+             $('#'+id).change(function(){
+-                const value=parseInt(this.value);
++                const value=decimal?parseFloat(this.value):parseInt(this.value);
+                 if(!isNaN(value))
+-                    Hyperparams[key]=Math.max(min,value);
++                    Hyperparams[key]=Math.min(max,Math.max(min,value));
+                 this.value=Hyperparams[key];
+             });
+         }
+diff --git a/src/Controllers/SetupPanel.js b/src/Controllers/SetupPanel.js
+new file mode 100644
+index 0000000..c8e6dd0
+--- /dev/null
++++ b/src/Controllers/SetupPanel.js
+@@ -0,0 +1,66 @@
++const WorldConfig=require("../WorldConfig");
++const Random=require("../Utils/Random");
++
++//[key,label,min,max,step]
++const COMMON=[
++    ['scale','Scale (cells per feature)',2,500,1],
++    ['octaves','Octaves (detail layers)',1,8,1],
++    ['persistence','Persistence',0,1,0.05],
++    ['lacunarity','Lacunarity',1,6,0.1],
++];
++const ZONE=[['amplitude','Amplitude (contrast)',0,10,0.1],['offset','Offset (bias)',-1,4,0.1]];
++const WALLS=[['threshold','Band start',-1,1,0.001],['thickness','Band thickness',0,2,0.005]];
++
++//seed and noise controls
++const SetupPanel={
++    init(control_panel){
++        this.env=control_panel.engine.env;
++        $('.noise-options').each((i,box)=>this.buildNoise($(box),box.dataset.noise));
++        $('#sim-seed').val(Random.seed);
++        $('#seed-random').click(()=>$('#sim-seed').val(Random.newSeed()));
++        $('#seed-apply').click(()=>{
++            const seed=Number($('#sim-seed').val());
++            if(!Number.isInteger(seed)||seed<0||seed>4294967295){
++                alert('The seed must be a whole number from 0 to 4294967295');
++                return;
++            }
++            const previous=Random.seed;
++            Random.setSeed(seed);
++            if(this.env.reset())
++                control_panel.stats_panel.reset();
++            else
++                Random.setSeed(previous);
++        });
++        this.updateStatus();
++    },
++
++    buildNoise(box,name){
++        const settings=WorldConfig.noise[name];
++        const fields=[['seed','Seed',0,4294967295,1],...COMMON,...(name=='walls'?WALLS:ZONE)];
++        for(const [key,label,min,max,step] of fields){
++            const input=$('<input type="number">').attr({min,max,step}).val(settings[key]);
++            input.change(()=>{
++                let value=Number(input.val());
++                if(input.val()!==''&&!isNaN(value)){
++                    value=Math.min(max,Math.max(min,value));
++                    settings[key]=(key=='seed'||key=='octaves')?Math.floor(value):value;
++                }
++                input.val(settings[key]);
++            });
++            const row=$('<div class="row"></div>').append($('<label></label>').text(label),input);
++            if(key=='seed'){
++                row.append($('<button title="New random seed"><i class="fa fa-dice"></i></button>').click(()=>{
++                    settings.seed=Random.newSeed();
++                    input.val(settings.seed);
++                }));
++            }
++            box.append(row);
++        }
++    },
++
++    updateStatus(){
++        $('#seed-current').text('Current seed: '+Random.seed);
++    },
++}
++
++module.exports=SetupPanel;
+diff --git a/src/Engine.js b/src/Engine.js
+index ce32212..8e9a6ca 100644
+--- a/src/Engine.js
++++ b/src/Engine.js
+@@ -2,6 +2,7 @@ const WorldEnvironment = require('./Environments/WorldEnvironment');
+ const ControlPanel = require('./Controllers/ControlPanel');
+ const OrganismEditor = require('./Environments/OrganismEditor');
+ const ColorScheme = require('./Rendering/ColorScheme');
++const Random=require('./Utils/Random');
+ 
+ // If the simulation speed is below this value, a new interval will be created to handle ui rendering
+ // at a reasonable speed. If it is above, the simulation interval will be used to update the ui.
+@@ -15,7 +16,7 @@ class Engine {
+         this.controlpanel = new ControlPanel(this);
+         this.colorscheme = new ColorScheme(this.env, this.organism_editor);
+         this.colorscheme.loadColorScheme();
+-        this.env.OriginOfLife();
++        Random.run(()=>this.env.OriginOfLife());
+         
+         this.sim_last_update = Date.now();
+         this.sim_delta_time = 0;
+diff --git a/src/Environments/OrganismEditor.js b/src/Environments/OrganismEditor.js
+index 908011f..9a977e4 100644
+--- a/src/Environments/OrganismEditor.js
++++ b/src/Environments/OrganismEditor.js
+@@ -5,16 +5,19 @@ const Renderer = require('../Rendering/Renderer');
+ const CellStates = require('../Organism/Cell/CellStates');
+ const EditorController = require("../Controllers/EditorController");
+ const Species = require('../Stats/Species');
++const Random=require('../Utils/Random');
+ const RandomOrganismGenerator = require('../Organism/RandomOrganismGenerator')
+ 
+ class OrganismEditor extends Environment{
+     constructor() {
+         super();
+         this.is_active = true;
+-        var cell_size = 13;
+-        this.renderer = new Renderer('editor-canvas', 'editor-env', cell_size);
++        this.cell_size=13;
++        this.grid_size=15;
++        this.renderer = new Renderer('editor-canvas', 'editor-env', this.cell_size);
+         this.controller = new EditorController(this, this.renderer.canvas);
+-        this.grid_map = new GridMap(15, 15, cell_size);
++        this.grid_map = new GridMap(this.grid_size, this.grid_size, this.cell_size);
++        this.renderer.fillShape(this.grid_size*this.cell_size,this.grid_size*this.cell_size);
+         this.setDefaultOrg();
+     }
+ 
+@@ -26,6 +29,60 @@ class OrganismEditor extends Environment{
+ 
+     changeCell(c, r, state, owner) {
+         super.changeCell(c, r, state, owner);
++        //redraw just this cell, so large organisms stay fast
++        const cell=this.grid_map.cellAt(c,r);
++        if(cell!=null)
++            this.renderer.renderCell(cell);
++    }
++
++    //smallest odd grid that holds the whole organism around the centre
++    requiredSize(){
++        let reach=0;
++        const org=this.organism;
++        if(org){
++            for(const cell of [...org.anatomy.cells,...org.lost_cells])
++                reach=Math.max(reach,Math.abs(cell.loc_col),Math.abs(cell.loc_row));
++        }
++        return 2*reach+1;
++    }
++
++    setGrid(size,cell_size){
++        size=Math.max(5,Math.min(201,size|1),this.requiredSize());
++        this.grid_size=size;
++        this.cell_size=cell_size;
++        this.grid_map.resize(size,size,cell_size);
++        this.renderer.cell_size=cell_size;
++        this.renderer.fillShape(size*cell_size,size*cell_size);
++        this.renderer.cells_to_highlight.clear();
++        this.renderer.highlighted_cells.clear();
++        this.controller.cur_cell=null;
++        this.controller.cur_org=null;
++        this.drawOrganism();
++        $('#editor-grid-size').val(size);
++        $('#editor-zoom').val(cell_size);
++    }
++
++    zoomToFit(){
++        const box=document.getElementById('editor-env');
++        const space=Math.min(box.clientWidth,box.clientHeight);
++        this.setGrid(this.grid_size,Math.max(3,Math.min(30,Math.floor(space/this.grid_size))));
++    }
++
++    //centres the organism and redraws, growing the grid if it doesn't fit
++    showOrganism(){
++        const needed=this.requiredSize();
++        if(needed>this.grid_size)
++            this.setGrid(needed+4,this.cell_size);
++        else
++            this.drawOrganism();
++    }
++
++    drawOrganism(){
++        this.grid_map.fillGrid(CellStates.empty);
++        if(this.organism){
++            [this.organism.c,this.organism.r]=this.grid_map.getCenter();
++            this.organism.updateGrid();
++        }
+         this.renderFull();
+     }
+ 
+@@ -67,10 +124,8 @@ class OrganismEditor extends Environment{
+     }
+ 
+     setOrganismToCopyOf(orig_org) {
+-        this.grid_map.fillGrid(CellStates.empty);
+-        var center = this.grid_map.getCenter();
+-        this.organism = new Organism(center[0], center[1], this, orig_org);
+-        this.organism.updateGrid();
++        this.organism = new Organism(0, 0, this, orig_org);
++        this.showOrganism();
+         this.controller.updateDetails();
+     }
+     
+@@ -88,16 +143,16 @@ class OrganismEditor extends Environment{
+         var center = this.grid_map.getCenter();
+         this.organism = new Organism(center[0], center[1], this, null);
+         this.organism.anatomy.addDefaultCell(CellStates.mouth, 0, 0);
+-        this.organism.updateGrid();
+         this.organism.species = new Species(this.organism.anatomy, null, 0);
++        this.showOrganism();
+     }
+ 
+     createRandom() {
+         this.grid_map.fillGrid(CellStates.empty);
+ 
+         this.organism = RandomOrganismGenerator.generate(this);
+-        this.organism.updateGrid();
+         this.organism.species = new Species(this.organism.anatomy, null, 0);
++        this.showOrganism();
+     }
+ 
+     resetWithRandomOrgs(env) {
+@@ -105,6 +160,7 @@ class OrganismEditor extends Environment{
+         if (!reset_confirmed) return;
+         let numOrganisms = parseInt($('#num-random-orgs').val());
+ 
++        Random.run(()=>{
+         let size = Math.ceil(8);
+ 
+         for (let i=0; i<numOrganisms; i++) {
+@@ -114,6 +170,7 @@ class OrganismEditor extends Environment{
+             var row = Math.floor(size + (Math.random() * (env.grid_map.rows-(size*2)) ) );
+             env.controller.dropOrganism(newOrganism, col, row);
+         }
++        });
+     }
+ }
+ 
+diff --git a/src/Environments/WorldEnvironment.js b/src/Environments/WorldEnvironment.js
+index 675ea8e..82bb751 100644
+--- a/src/Environments/WorldEnvironment.js
++++ b/src/Environments/WorldEnvironment.js
+@@ -10,6 +10,7 @@ const WorldConfig = require('../WorldConfig');
+ const SerializeHelper = require('../Utils/SerializeHelper');
+ const Species = require('../Stats/Species');
+ const WorldRules=require('./WorldRules');
++const Random=require('../Utils/Random');
+ const ZoneMaps=require('../Grid/ZoneMaps');
+ 
+ class WorldEnvironment extends Environment{
+@@ -33,6 +34,10 @@ class WorldEnvironment extends Environment{
+     }
+ 
+     update() {
++        Random.run(()=>this.step());
++    }
++
++    step() {
+         var to_remove = [];
+         for (var i in this.organisms) {
+             var org = this.organisms[i];
+@@ -76,7 +81,7 @@ class WorldEnvironment extends Environment{
+                 $('.pause-button')[0].click();
+             else if(WorldConfig.auto_reset) {
+                 this.reset_count++;
+-                this.reset(false);
++                this.reset(false,true,true);
+             }
+         }
+     }
+@@ -174,10 +179,12 @@ class WorldEnvironment extends Environment{
+         }
+     }
+ 
+-    reset(confirm_reset=true, reset_life=true) {
++    reset(confirm_reset=true, reset_life=true, keep_stream=false) {
+         if (confirm_reset && !confirm('The current environment will be lost. Proceed?'))
+             return false;
+ 
++        if(!keep_stream)
++            Random.restart();
+         this.organisms = [];
+         this.grid_map.fillGrid(CellStates.empty, !WorldConfig.clear_walls_on_reset);
+         this.renderer.renderFullGrid(this.grid_map.grid);
+@@ -186,7 +193,7 @@ class WorldEnvironment extends Environment{
+         this.trackAllFood();
+         FossilRecord.clear_record();
+         if (reset_life)
+-            this.OriginOfLife();
++            Random.run(()=>this.OriginOfLife());
+         return true;
+     }
+ 
+@@ -214,6 +221,7 @@ class WorldEnvironment extends Environment{
+         }
+         env.fossil_record = FossilRecord.serialize();
+         env.controls = Hyperparams;
++        env.seed=Random.seed;
+         return env;
+     }
+ 
+@@ -258,6 +266,8 @@ class WorldEnvironment extends Environment{
+         SerializeHelper.overwriteNonObjects(env, this);
+         if ($('#override-controls').is(':checked'))
+             Hyperparams.loadJsonObj(env.controls)
++        if(env.seed!==undefined)
++            Random.setSeed(env.seed);
+         this.trackAllFood();
+         this.renderer.renderFullGrid(this.grid_map.grid);
+     }
+diff --git a/src/Environments/WorldRules.js b/src/Environments/WorldRules.js
+index 8c02516..7707272 100644
+--- a/src/Environments/WorldRules.js
++++ b/src/Environments/WorldRules.js
+@@ -1,5 +1,6 @@
+ const Hyperparams=require("../Hyperparameters");
+ const CellStates=require("../Organism/Cell/CellStates");
++const Random=require("../Utils/Random");
+ 
+ //world-level rules: seasons, food rot and meteors
+ const WorldRules={
+diff --git a/src/Grid/ZoneMaps.js b/src/Grid/ZoneMaps.js
+index b0c0535..8329011 100644
+--- a/src/Grid/ZoneMaps.js
++++ b/src/Grid/ZoneMaps.js
+@@ -1,4 +1,6 @@
+ const Perlin=require("../Utils/Perlin");
++const Random=require("../Utils/Random");
++const WorldConfig=require("../WorldConfig");
+ 
+ //per-cell multipliers. 1 is neutral
+ const ZoneMaps={
+@@ -10,12 +12,31 @@ const ZoneMaps={
+         return Math.round(Math.min(this.max[key],Math.max(0,value))*100)/100;
+     },
+ 
++    //calls fn(cell,noise) for every cell, using layered perlin noise
++    forEachNoise(grid_map,settings,fn){
++        const {seed,scale,octaves,persistence,lacunarity}=settings;
++        Random.withSeed(seed,()=>{
++            Perlin.seed();
++            for(const col of grid_map.grid){
++                for(const cell of col){
++                    let sum=0,norm=0,amp=1,freq=1/scale;
++                    for(let i=0;i<octaves;i++){
++                        sum+=amp*Perlin.get(cell.col*freq+i*17.3,cell.row*freq+i*17.3);
++                        norm+=amp;
++                        amp*=persistence;
++                        freq*=lacunarity;
++                    }
++                    fn(cell,sum/norm);
++                }
++            }
++        });
++    },
++
+     randomize(grid_map,key){
+-        Perlin.seed();
+-        for(const col of grid_map.grid){
+-            for(const cell of col)
+-                cell[key]=this.clamp(key,1+Perlin.get(cell.col/20,cell.row/20)*2.5);
+-        }
++        const settings=WorldConfig.noise[key];
++        this.forEachNoise(grid_map,settings,(cell,noise)=>{
++            cell[key]=this.clamp(key,1+settings.offset+noise*settings.amplitude);
++        });
+     },
+ 
+     flatten(grid_map,key){
+diff --git a/src/Hyperparameters.js b/src/Hyperparameters.js
+index b6e0ba6..9545f77 100644
+--- a/src/Hyperparameters.js
++++ b/src/Hyperparameters.js
+@@ -9,6 +9,14 @@ const Hyperparams = {
+         this.parasiteStealPercent=50;
+         this.parasiteCooldown=20;
+         this.kamikazeRange=2;
++        this.armorDurability=10;
++        this.drillDamage=2;
++        this.drillInterval=5;
++        this.drillBreakDamage=30;
++        this.glueTimeout=100;
++        this.glueCooldown=50;
++        this.regrowCost=2;
++        this.regrowInterval=20;
+         this.transportAgeGap=40;
+         this.transportAmount=1;
+         this.kinRecognition=false;
+diff --git a/src/Organism/Anatomy.js b/src/Organism/Anatomy.js
+index ec3173d..89daeff 100644
+--- a/src/Organism/Anatomy.js
++++ b/src/Organism/Anatomy.js
+@@ -137,6 +137,7 @@ class Anatomy {
+ 
+     loadRaw(anatomy) {
+         this.clear();
++        this.birth_distance=4;
+         for (let cell of anatomy.cells){
+             this.addInheritCell(cell);
+         }
+diff --git a/src/Organism/Cell/BodyCells/ArmorCell.js b/src/Organism/Cell/BodyCells/ArmorCell.js
+index bd3b110..f6f0809 100644
+--- a/src/Organism/Cell/BodyCells/ArmorCell.js
++++ b/src/Organism/Cell/BodyCells/ArmorCell.js
+@@ -4,6 +4,7 @@ const BodyCell = require("./BodyCell");
+ class ArmorCell extends BodyCell{
+     constructor(org, loc_col, loc_row){
+         super(CellStates.armor, org, loc_col, loc_row);
++        this.wear=0; //drill damage taken
+     }
+ }
+ 
+diff --git a/src/Organism/Cell/BodyCells/BodyCellFactory.js b/src/Organism/Cell/BodyCells/BodyCellFactory.js
+index 2ade8b3..aae8e09 100644
+--- a/src/Organism/Cell/BodyCells/BodyCellFactory.js
++++ b/src/Organism/Cell/BodyCells/BodyCellFactory.js
+@@ -9,6 +9,9 @@ const ScavengerCell=require("./ScavengerCell");
+ const ParasiteCell=require("./ParasiteCell");
+ const KamikazeCell=require("./KamikazeCell");
+ const TransporterCell=require("./TransporterCell");
++const DrillCell=require("./DrillCell");
++const StickyCell=require("./StickyCell");
++const RegrowerCell=require("./RegrowerCell");
+ const CellStates = require("../CellStates");
+ 
+ 
+@@ -26,6 +29,9 @@ const BodyCellFactory = {
+         type_map[CellStates.parasite.name]=ParasiteCell;
+         type_map[CellStates.kamikaze.name]=KamikazeCell;
+         type_map[CellStates.transporter.name]=TransporterCell;
++        type_map[CellStates.drill.name]=DrillCell;
++        type_map[CellStates.sticky.name]=StickyCell;
++        type_map[CellStates.regrower.name]=RegrowerCell;
+         this.type_map = type_map;
+     },
+ 
+diff --git a/src/Organism/Cell/BodyCells/DrillCell.js b/src/Organism/Cell/BodyCells/DrillCell.js
+new file mode 100644
+index 0000000..6365ce3
+--- /dev/null
++++ b/src/Organism/Cell/BodyCells/DrillCell.js
+@@ -0,0 +1,52 @@
++const CellStates=require("../CellStates");
++const BodyCell=require("./BodyCell");
++const Hyperparams=require("../../../Hyperparameters");
++const Neighbors=require("../../../Grid/Neighbors");
++
++//wears down adjacent armor, and breaks after dealing enough damage
++class DrillCell extends BodyCell{
++    constructor(org,loc_col,loc_row){
++        super(CellStates.drill,org,loc_col,loc_row);
++        this.dealt=0;
++        this.cooldown=0;
++    }
++
++    performFunction(){
++        if(this.cooldown>0){
++            this.cooldown--;
++            return;
++        }
++        const env=this.org.env;
++        const c=this.getRealCol();
++        const r=this.getRealRow();
++        for(const [dc,dr] of Neighbors.adjacent){
++            if(this.drill(env.grid_map.cellAt(c+dc,r+dr))){
++                this.cooldown=Hyperparams.drillInterval;
++                return;
++            }
++        }
++    }
++
++    drill(cell){
++        if(cell==null||cell.state!=CellStates.armor)
++            return false;
++        const victim=cell.owner;
++        if(victim==null||victim==this.org||!victim.living)
++            return false;
++        if(Hyperparams.kinRecognition&&victim.species===this.org.species)
++            return false;
++        const armor=cell.cell_owner;
++        const amount=Math.max(0,Math.min(Hyperparams.drillDamage,
++            Hyperparams.armorDurability-armor.wear,
++            Hyperparams.drillBreakDamage-this.dealt));
++        armor.wear+=amount;
++        this.dealt+=amount;
++        if(armor.wear>=Hyperparams.armorDurability)
++            victim.loseCell(armor);
++        if(this.dealt>=Hyperparams.drillBreakDamage)
++            this.org.loseCell(this);
++        return true;
++    }
++}
++
++module.exports=DrillCell;
+diff --git a/src/Organism/Cell/BodyCells/RegrowerCell.js b/src/Organism/Cell/BodyCells/RegrowerCell.js
+new file mode 100644
+index 0000000..d4ec717
+--- /dev/null
++++ b/src/Organism/Cell/BodyCells/RegrowerCell.js
+@@ -0,0 +1,26 @@
++const CellStates=require("../CellStates");
++const BodyCell=require("./BodyCell");
++const Hyperparams=require("../../../Hyperparameters");
++
++//spends stored food to rebuild lost body cells
++class RegrowerCell extends BodyCell{
++    constructor(org,loc_col,loc_row){
++        super(CellStates.regrower,org,loc_col,loc_row);
++        this.cooldown=0;
++    }
++
++    performFunction(){
++        if(this.cooldown>0){
++            this.cooldown--;
++            return;
++        }
++        if(this.org.food_collected<Hyperparams.regrowCost)
++            return;
++        if(this.org.regrowCell()){
++            this.org.food_collected-=Hyperparams.regrowCost;
++            this.cooldown=Hyperparams.regrowInterval;
++        }
++    }
++}
++
++module.exports=RegrowerCell;
+diff --git a/src/Organism/Cell/BodyCells/StickyCell.js b/src/Organism/Cell/BodyCells/StickyCell.js
+new file mode 100644
+index 0000000..a552814
+--- /dev/null
++++ b/src/Organism/Cell/BodyCells/StickyCell.js
+@@ -0,0 +1,28 @@
++const CellStates=require("../CellStates");
++const BodyCell=require("./BodyCell");
++const Hyperparams=require("../../../Hyperparameters");
++const Neighbors=require("../../../Grid/Neighbors");
++const Glue=require("../../Glue");
++
++//glues its organism to any organism it touches
++class StickyCell extends BodyCell{
++    constructor(org,loc_col,loc_row){
++        super(CellStates.sticky,org,loc_col,loc_row);
++    }
++
++    performFunction(){
++        if(Hyperparams.glueTimeout<=0)
++            return;
++        const env=this.org.env;
++        const c=this.getRealCol();
++        const r=this.getRealRow();
++        for(const [dc,dr] of Neighbors.adjacent){
++            const cell=env.grid_map.cellAt(c+dc,r+dr);
++            const other=cell==null?null:cell.owner;
++            if(other!=null&&other!=this.org&&other.living&&Glue.canBond(this.org,other))
++                Glue.bond(this.org,other);
++        }
++    }
++}
++
++module.exports=StickyCell;
+diff --git a/src/Organism/Cell/CellStates.js b/src/Organism/Cell/CellStates.js
+index 79471a5..f769105 100644
+--- a/src/Organism/Cell/CellStates.js
++++ b/src/Organism/Cell/CellStates.js
+@@ -104,6 +104,24 @@ class Transporter extends CellState {
+     }
+ }
+ 
++class Drill extends CellState {
++    constructor() {
++        super('drill');
++    }
++}
++
++class Sticky extends CellState {
++    constructor() {
++        super('sticky');
++    }
++}
++
++class Regrower extends CellState {
++    constructor() {
++        super('regrower');
++    }
++}
++
+ const CellStates = {
+     empty: new Empty(),
+     food: new Food(),
+@@ -119,9 +137,12 @@ const CellStates = {
+     parasite:new Parasite(),
+     kamikaze:new Kamikaze(),
+     transporter:new Transporter(),
++    drill:new Drill(),
++    sticky:new Sticky(),
++    regrower:new Regrower(),
+     defineLists() {
+-        this.all = [this.empty, this.food, this.wall, this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger, this.parasite, this.kamikaze, this.transporter]
+-        this.living = [this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger, this.parasite, this.kamikaze, this.transporter];
++        this.all = [this.empty, this.food, this.wall, this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger, this.parasite, this.kamikaze, this.transporter, this.drill, this.sticky, this.regrower]
++        this.living = [this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger, this.parasite, this.kamikaze, this.transporter, this.drill, this.sticky, this.regrower];
+     },
+     getRandomName: function() {
+         return this.all[Math.floor(Math.random() * this.all.length)].name;
+diff --git a/src/Organism/Glue.js b/src/Organism/Glue.js
+new file mode 100644
+index 0000000..58f6e70
+--- /dev/null
++++ b/src/Organism/Glue.js
+@@ -0,0 +1,98 @@
++const Hyperparams=require("../Hyperparameters");
++const CellStates=require("./Cell/CellStates");
++
++//bonds between organisms. each organism has a Map: partner -> tick the bond ends
++const Glue={
++    version:0, //bumped on every change so cached groups are rebuilt
++
++    canBond(a,b){
++        const until=a.bonds.get(b);
++        return until===undefined||a.env.total_ticks>=until+Hyperparams.glueCooldown;
++    },
++
++    bond(a,b){
++        const until=a.env.total_ticks+Hyperparams.glueTimeout;
++        a.bonds.set(b,until);
++        b.bonds.set(a,until);
++        this.version++;
++    },
++
++    release(org){
++        for(const other of org.bonds.keys())
++            other.bonds.delete(org);
++        org.bonds.clear();
++        this.version++;
++    },
++
++    //movers x total cells
++    weight(org){
++        const movers=org.anatomy.cells.filter(cell=>cell.state==CellStates.mover).length;
++        return movers*org.anatomy.cells.length;
++    },
++
++    //{members,leader} of the connected group containing org
++    group(org){
++        if(org.bonds.size==0)
++            return {members:[org],leader:org};
++        const tick=org.env.total_ticks;
++        const cached=org._group;
++        if(cached&&cached.tick==tick&&cached.version==this.version)
++            return cached;
++        const found=new Set([org]);
++        for(const member of found){ //a Set visits items added during the loop
++            for(const [other,until] of member.bonds){
++                if(!other.living||tick>=until+Hyperparams.glueCooldown)
++                    member.bonds.delete(other);
++                else if(tick<until)
++                    found.add(other);
++            }
++        }
++        const members=[...found];
++        let leader=members[0];
++        let best=this.weight(leader);
++        for(const member of members){
++            const w=this.weight(member);
++            //ties go to the older organism, so every member agrees
++            if(w>best||(w==best&&member.uid<leader.uid)){
++                leader=member;
++                best=w;
++            }
++        }
++        const group={members,leader,tick,version:this.version};
++        for(const member of members)
++            member._group=group;
++        return group;
++    },
++
++    //moves the whole group one step, only if every member fits
++    move(members,dc,dr){
++        const env=members[0].env;
++        const own=new Set(members);
++        for(const org of members){
++            for(const body of org.anatomy.cells){
++                const target=org.getRealCell(body,org.c+dc,org.r+dr);
++                if(target==null)
++                    return false;
++                const free=own.has(target.owner)||target.state==CellStates.empty||
++                    (!Hyperparams.foodBlocksReproduction&&target.state==CellStates.food);
++                if(!free)
++                    return false;
++            }
++        }
++        //erase everyone before drawing anyone
++        for(const org of members){
++            for(const body of org.anatomy.cells){
++                const cell=org.getRealCell(body);
++                env.changeCell(cell.col,cell.row,CellStates.empty,null);
++            }
++        }
++        for(const org of members){
++            org.c+=dc;
++            org.r+=dr;
++            org.updateGrid();
++        }
++        return true;
++    },
++}
++
++module.exports=Glue;
+diff --git a/src/Organism/Organism.js b/src/Organism/Organism.js
+index 4efc353..aa4701b 100644
+--- a/src/Organism/Organism.js
++++ b/src/Organism/Organism.js
+@@ -6,6 +6,8 @@ const Anatomy = require("./Anatomy");
+ const Brain = require("./Perception/Brain");
+ const FossilRecord = require("../Stats/FossilRecord");
+ const SerializeHelper = require("../Utils/SerializeHelper");
++const Glue=require("./Glue");
++let next_uid=0;
+ 
+ class Organism {
+     constructor(col, row, env, parent=null) {
+@@ -25,6 +27,9 @@ class Organism {
+         this.mutability = 5;
+         this.damage = 0;
+         this.brain = new Brain(this);
++        this.uid=next_uid++;
++        this.lost_cells=[]; //body cells that broke off and can be regrown
++        this.bonds=new Map();
+         if (parent != null) {
+             this.inherit(parent);
+         }
+@@ -34,7 +39,8 @@ class Organism {
+         this.move_range = parent.move_range;
+         this.mutability = parent.mutability;
+         this.species = parent.species;
+-        for (var c of parent.anatomy.cells){
++        //offspring get the full body, including cells the parent has lost
++        for (var c of [...parent.anatomy.cells,...parent.lost_cells]){
+             //deep copy parent cells
+             this.anatomy.addInheritCell(c);
+         }
+@@ -45,15 +51,47 @@ class Organism {
+ 
+     // amount of food required before it can reproduce
+     foodNeeded() {
+-        return this.anatomy.is_mover ? this.anatomy.cells.length + Hyperparams.extraMoverFoodCost : this.anatomy.cells.length;
++        return this.anatomy.is_mover ? this.bodySize() + Hyperparams.extraMoverFoodCost : this.bodySize();
+     }
+ 
+     lifespan() {
+-        return this.anatomy.cells.length * Hyperparams.lifespanMultiplier;
++        return this.bodySize() * Hyperparams.lifespanMultiplier;
+     }
+ 
+     maxHealth() {
+-        return this.anatomy.cells.length;
++        return this.bodySize();
++    }
++
++    //size of the complete body, so losing armor doesn't change lifespan or cost
++    bodySize(){
++        return this.anatomy.cells.length+this.lost_cells.length;
++    }
++
++    loseCell(cell){
++        const spot=cell.getRealCell();
++        this.anatomy.removeCell(cell.loc_col,cell.loc_row,true);
++        cell.broken=true;
++        this.lost_cells.push(cell);
++        Glue.version++;
++        if(spot!=null&&spot.cell_owner===cell)
++            this.env.changeCell(spot.col,spot.row,CellStates.empty,null);
++        if(this.anatomy.cells.length==0)
++            this.die();
++    }
++
++    //rebuilds the first lost cell whose square is free
++    regrowCell(){
++        for(let i=0;i<this.lost_cells.length;i++){
++            const lost=this.lost_cells[i];
++            const spot=this.getRealCell(lost);
++            if(spot==null||(spot.state!=CellStates.empty&&spot.state!=CellStates.food))
++                continue;
++            const cell=this.anatomy.addInheritCell(lost);
++            this.lost_cells.splice(i,1);
++            this.env.changeCell(spot.col,spot.row,cell.state,cell);
++            return true;
++        }
++        return false;
+     }
+ 
+     reproduce() {
+@@ -162,6 +200,9 @@ class Organism {
+         var direction_r = direction[1];
+         var new_c = this.c + direction_c;
+         var new_r = this.r + direction_r;
++        const group=Glue.group(this);
++        if(group.members.length>1)
++            return Glue.move(group.members,direction_c,direction_r);
+         if (this.isClear(new_c, new_r)) {
+             for (var cell of this.anatomy.cells) {
+                 var real_c = this.c + cell.rotatedCol(this.rotation);
+@@ -182,6 +223,8 @@ class Organism {
+             this.move_count = 0;
+             return true;
+         }
++        if(Glue.group(this).members.length>1) //glued groups only translate
++            return false;
+         var new_rotation = Directions.getRandomDirection();
+         if(this.isClear(this.c, this.r, new_rotation)){
+             for (var cell of this.anatomy.cells) {
+@@ -262,6 +305,7 @@ class Organism {
+ 
+     die() {
+         if(!this.living) return;
++        Glue.release(this);
+         //marked dead first so chain explosions can't kill it twice
+         this.living=false;
+         const others=this.anatomy.cells.filter(cell=>cell.state!=CellStates.kamikaze);
+@@ -298,13 +342,19 @@ class Organism {
+         if (this.food_collected >= this.foodNeeded()) {
+             this.reproduce();
+         }
+-        for (var cell of this.anatomy.cells) {
++        //iterate over a copy, because cells can break off or regrow
++        for (var cell of [...this.anatomy.cells]) {
++            if(cell.broken) continue;
+             cell.performFunction();
+             if (!this.living)
+                 return this.living
+         }
+         
+-        if (this.anatomy.is_mover) {
++        //in a glued group only the leader moves
++        const leads=Glue.group(this).leader===this;
++        if(!leads||!this.anatomy.is_mover)
++            this.brain.observations=[];
++        if (leads&&this.anatomy.is_mover) {
+             this.move_count++;
+             var changed_dir = false;
+             if (this.ignore_brain_for == 0){
+@@ -358,12 +408,32 @@ class Organism {
+         if (this.anatomy.is_mover && this.anatomy.has_eyes)
+             org.brain = this.brain.serialize();
+         org.species_name = this.species.name;
++        org.lost_cells=this.lost_cells.map(c=>({loc_col:c.loc_col,loc_row:c.loc_row,direction:c.direction,state:{name:c.state.name}}));
++        //wear on armor and drills is saved with each cell
+         return org;
+     }
+ 
+     loadRaw(org) {
++        const uid=this.uid;
+         SerializeHelper.overwriteNonObjects(org, this);
++        this.uid=uid;
+         this.anatomy.loadRaw(org.anatomy)
++        for(const raw of org.anatomy.cells){
++            const cell=this.anatomy.getLocalCell(raw.loc_col,raw.loc_row);
++            for(const key of ['wear','dealt']){
++                if(raw[key]!==undefined)
++                    cell[key]=raw[key];
++            }
++        }
++        this.lost_cells=[];
++        for(const raw of org.lost_cells||[]){
++            const state=CellStates[raw.state.name];
++            const cell=this.anatomy.addInheritCell({...raw,state});
++            this.anatomy.cells.pop();
++            cell.broken=true;
++            this.lost_cells.push(cell);
++        }
++        this.anatomy.checkTypeChange();
+         if (org.brain)
+             this.brain.copy(org.brain)
+     }
+diff --git a/src/Organism/Perception/Brain.js b/src/Organism/Perception/Brain.js
+index 1e5614b..b474cde 100644
+--- a/src/Organism/Perception/Brain.js
++++ b/src/Organism/Perception/Brain.js
+@@ -50,6 +50,9 @@ class Brain {
+         this.decisions[CellStates.parasite.name]=Decision.getRandom();
+         this.decisions[CellStates.kamikaze.name]=Decision.getRandom();
+         this.decisions[CellStates.transporter.name]=Decision.getRandom();
++        this.decisions[CellStates.drill.name]=Decision.getRandom();
++        this.decisions[CellStates.sticky.name]=Decision.getRandom();
++        this.decisions[CellStates.regrower.name]=Decision.getRandom();
+     }
+ 
+     observe(observation) {
+diff --git a/src/Rendering/ColorScheme.js b/src/Rendering/ColorScheme.js
+index 24bd1a8..f0a5fdf 100644
+--- a/src/Rendering/ColorScheme.js
++++ b/src/Rendering/ColorScheme.js
+@@ -15,6 +15,9 @@ var color_scheme = {
+     "parasite":"#B53DB5",
+     "kamikaze":"#8B0000",
+     "transporter":"#00A896",
++    "drill":"#C6F432",
++    "sticky":"#E8890C",
++    "regrower":"#FFB3C7",
+     "eye-slit": "#0E1318"
+ }
+ 
+diff --git a/src/Utils/Random.js b/src/Utils/Random.js
+new file mode 100644
+index 0000000..2b84c78
+--- /dev/null
++++ b/src/Utils/Random.js
+@@ -0,0 +1,53 @@
++const native=Math.random;
++
++//small seeded generator (mulberry32)
++function generator(seed){
++    let a=seed>>>0;
++    return function(){
++        a=(a+0x6D2B79F5)>>>0;
++        let t=a;
++        t=Math.imul(t^(t>>>15),t|1);
++        t^=t+Math.imul(t^(t>>>7),t|61);
++        return ((t^(t>>>14))>>>0)/4294967296;
++    };
++}
++
++//the simulation runs on a seeded stream. UI actions keep the browser's generator
++const Random={
++    newSeed(){
++        return Math.floor(native()*4294967296);
++    },
++
++    setSeed(seed){
++        this.seed=seed>>>0;
++        this.restart();
++    },
++
++    restart(){
++        this.next=generator(this.seed);
++    },
++
++    //runs fn with Math.random drawing from the simulation stream
++    run(fn){
++        return this.use(this.next,fn);
++    },
++
++    //runs fn on a separate stream, used for noise maps
++    withSeed(seed,fn){
++        return this.use(generator(seed),fn);
++    },
++
++    use(source,fn){
++        const previous=Math.random;
++        Math.random=source;
++        try{
++            return fn();
++        }
++        finally{
++            Math.random=previous;
++        }
++    },
++}
++Random.setSeed(Random.newSeed());
++
++module.exports=Random;
+diff --git a/src/WorldConfig.js b/src/WorldConfig.js
+index fe31b55..5711c7e 100644
+--- a/src/WorldConfig.js
++++ b/src/WorldConfig.js
+@@ -1,3 +1,5 @@
++const Random=require('./Utils/Random');
++
+ const WorldConfig = {
+     headless: false,
+     clear_walls_on_reset: false,
+@@ -5,6 +7,14 @@ const WorldConfig = {
+     auto_pause: false,
+     brush_size: 2,
+     zone_view:'off',
++    brush_shape:'square',
++    brush_intensity:100, //percent
++    //perlin settings, one set per use
++    noise:{
++        fertility:{seed:Random.newSeed(),scale:20,octaves:1,persistence:0.5,lacunarity:2,amplitude:2.5,offset:0},
++        mutation:{seed:Random.newSeed(),scale:20,octaves:1,persistence:0.5,lacunarity:2,amplitude:2.5,offset:0},
++        walls:{seed:Random.newSeed(),scale:30,octaves:1,persistence:0.5,lacunarity:2,threshold:-0.017,thickness:0.05},
++    },
+ }
+ 
+ module.exports = WorldConfig;
+\ No newline at end of file

@@ -1,0 +1,306 @@
+diff --git a/dist/index.html b/dist/index.html
+index 967badd..b000c85 100644
+--- a/dist/index.html
++++ b/dist/index.html
+@@ -63,6 +63,8 @@
+ 							<div class='cell-legend-type' id='eye' title="Eye: Observes cells and decides movement."></div>
+ 							<div class='cell-legend-type' id='healer' title="Healer: Slowly repairs damage."></div>
+ 							<div class='cell-legend-type' id='scavenger' title="Scavenger: Sometimes eats food 2 squares away."></div>
++							<div class='cell-legend-type' id='parasite' title="Parasite: Steals food from adjacent organisms. Blocked by armor and killer cells."></div>
++							<div class='cell-legend-type' id='kamikaze' title="Kamikaze: Explodes on death if the organism holds enough food."></div>
+ 							<div class='cell-legend-type' id='food' title="Food: Not part of an organism. Once an organism has eaten enough food, it will reproduce."></div>
+ 							<div class='cell-legend-type' id='wall' title="Wall: Not part of an organism. Blocks movement and reproduction."></div>
+ 						</div><br>
+@@ -97,6 +99,8 @@
+ 								<div class='cell-type' id='mouth' title="Mouth: Eats adjacent food."></div>
+ 								<div class='cell-type' id='producer' title="Producer: Produces adjacent food."></div>
+ 								<div class='cell-type' id='mover' title="Mover: Allows for movement and rotation."></div>
++								<div class='cell-type' id='parasite' title="Parasite: Steals food from adjacent organisms. Blocked by armor and killer cells."></div>
++								<div class='cell-type' id='kamikaze' title="Kamikaze: Explodes on death if the organism holds enough food."></div>
+ 							</div>
+ 							<div style='grid-column: 2;'>
+ 								<div class='cell-type' id='killer' title="Killer: Harms organisms in adjacent cells."></div>
+@@ -157,6 +161,8 @@
+ 									<option value="eye">eye</option>
+ 									<option value="healer">healer</option>
+ 									<option value="scavenger">scavenger</option>
++									<option value="parasite">parasite</option>
++									<option value="kamikaze">kamikaze</option>
+ 								</select>
+ 
+ 								<label for="reaction-edit">Reaction: </label>
+@@ -223,6 +229,15 @@
+ 						<label for="scavenge-prob" title='Chance each tick that a scavenger cell eats food 2 squares away.'>Probability of scavenging food:</label>
+ 						<input type="number" id="scavenge-prob" min="0" max="100" value="10" step="any">
+ 						<br>
++						<label for="parasite-steal" title="Share of a victim's food taken per steal, rounded up.">Parasite steal percentage:</label>
++						<input type="number" id="parasite-steal" min="0" max="100" value="50" step="1">
++						<br>
++						<label for="parasite-cooldown" title="Ticks a parasite cell waits after stealing.">Parasite timeout (ticks):</label>
++						<input type="number" id="parasite-cooldown" min="0" max="10000" value="20" step="1">
++						<br>
++						<label for="kamikaze-range" title="Blast radius in cells, as a square around each kamikaze cell.">Kamikaze range:</label>
++						<input type="number" id="kamikaze-range" min="0" max="20" value="2" step="1">
++						<br>
+ 						<label for="lifespan-multiplier" title='An organism lives for this many ticks per cell in its body.'>Lifespan multiplier:</label>
+ 						<input type="number" id="lifespan-multiplier" min="1" max="10000" value=100 step="1">
+ 						<br>
+diff --git a/src/Controllers/ControlPanel.js b/src/Controllers/ControlPanel.js
+index 7c8d687..0c33b25 100644
+--- a/src/Controllers/ControlPanel.js
++++ b/src/Controllers/ControlPanel.js
+@@ -269,6 +269,15 @@ class ControlPanel {
+         $('#scavenge-prob').change(function() {
+             Hyperparams.scavengeProb=parseFloat($('#scavenge-prob').val());
+         });
++        $('#parasite-steal').change(function() {
++            Hyperparams.parasiteStealPercent=parseInt($('#parasite-steal').val())||0;
++        });
++        $('#parasite-cooldown').change(function() {
++            Hyperparams.parasiteCooldown=parseInt($('#parasite-cooldown').val())||0;
++        });
++        $('#kamikaze-range').change(function() {
++            Hyperparams.kamikazeRange=parseInt($('#kamikaze-range').val())||0;
++        });
+         $('#lifespan-multiplier').change(function() {
+             Hyperparams.lifespanMultiplier = $('#lifespan-multiplier').val();
+         }.bind(this));
+@@ -367,6 +376,9 @@ class ControlPanel {
+     updateHyperparamUIValues(){
+         $('#food-prod-prob').val(Hyperparams.foodProdProb);
+         $('#scavenge-prob').val(Hyperparams.scavengeProb);
++        $('#parasite-steal').val(Hyperparams.parasiteStealPercent);
++        $('#parasite-cooldown').val(Hyperparams.parasiteCooldown);
++        $('#kamikaze-range').val(Hyperparams.kamikazeRange);
+         $('#lifespan-multiplier').val(Hyperparams.lifespanMultiplier);
+         $('#rot-enabled').prop('checked', Hyperparams.rotationEnabled);
+         $('#insta-kill').prop('checked', Hyperparams.instaKill);
+diff --git a/src/Controllers/EditorController.js b/src/Controllers/EditorController.js
+index c445b5a..2718234 100644
+--- a/src/Controllers/EditorController.js
++++ b/src/Controllers/EditorController.js
+@@ -92,6 +92,12 @@ class EditorController extends CanvasController{
+                 case "scavenger":
+                     self.edit_cell_type=CellStates.scavenger;
+                     break;
++                case "parasite":
++                    self.edit_cell_type=CellStates.parasite;
++                    break;
++                case "kamikaze":
++                    self.edit_cell_type=CellStates.kamikaze;
++                    break;
+             }
+             $(".cell-type" ).css( "border-color", "black" );
+             var selected = '#'+this.id+'.cell-type';
+diff --git a/src/Hyperparameters.js b/src/Hyperparameters.js
+index 6ead5f9..79b768d 100644
+--- a/src/Hyperparameters.js
++++ b/src/Hyperparameters.js
+@@ -6,6 +6,9 @@ const Hyperparams = {
+         this.foodProdProb = 5;
+         this.healProb=5;
+         this.scavengeProb=10;
++        this.parasiteStealPercent=50;
++        this.parasiteCooldown=20;
++        this.kamikazeRange=2;
+         this.killableNeighbors = Neighbors.adjacent;
+         this.edibleNeighbors = Neighbors.adjacent;
+         this.growableNeighbors = Neighbors.adjacent;
+diff --git a/src/Organism/Cell/BodyCells/BodyCellFactory.js b/src/Organism/Cell/BodyCells/BodyCellFactory.js
+index b49c7fd..f6d4abc 100644
+--- a/src/Organism/Cell/BodyCells/BodyCellFactory.js
++++ b/src/Organism/Cell/BodyCells/BodyCellFactory.js
+@@ -6,6 +6,8 @@ const ArmorCell = require("./ArmorCell");
+ const EyeCell = require("./EyeCell");
+ const HealerCell=require("./HealerCell");
+ const ScavengerCell=require("./ScavengerCell");
++const ParasiteCell=require("./ParasiteCell");
++const KamikazeCell=require("./KamikazeCell");
+ const CellStates = require("../CellStates");
+ 
+ 
+@@ -20,6 +22,8 @@ const BodyCellFactory = {
+         type_map[CellStates.eye.name] = EyeCell;
+         type_map[CellStates.healer.name]=HealerCell;
+         type_map[CellStates.scavenger.name]=ScavengerCell;
++        type_map[CellStates.parasite.name]=ParasiteCell;
++        type_map[CellStates.kamikaze.name]=KamikazeCell;
+         this.type_map = type_map;
+     },
+ 
+diff --git a/src/Organism/Cell/BodyCells/KamikazeCell.js b/src/Organism/Cell/BodyCells/KamikazeCell.js
+new file mode 100644
+index 0000000..4c33973
+--- /dev/null
++++ b/src/Organism/Cell/BodyCells/KamikazeCell.js
+@@ -0,0 +1,27 @@
++const CellStates=require("../CellStates");
++const BodyCell=require("./BodyCell");
++const Hyperparams=require("../../../Hyperparameters");
++const Neighbors=require("../../../Grid/Neighbors");
++
++class KamikazeCell extends BodyCell{
++    constructor(org,loc_col,loc_row){
++        super(CellStates.kamikaze,org,loc_col,loc_row);
++    }
++
++    //called by Organism.die()
++    explode(){
++        const env=this.org.env;
++        const c=this.getRealCol();
++        const r=this.getRealRow();
++        for(const [dc,dr] of Neighbors.inRange(Hyperparams.kamikazeRange)){
++            const cell=env.grid_map.cellAt(c+dc,r+dr);
++            if(cell==null||cell.owner==null||cell.owner==this.org||!cell.owner.living)
++                continue;
++            if(cell.state==CellStates.armor)
++                continue;
++            cell.owner.harm();
++        }
++    }
++}
++
++module.exports=KamikazeCell;
+diff --git a/src/Organism/Cell/BodyCells/ParasiteCell.js b/src/Organism/Cell/BodyCells/ParasiteCell.js
+new file mode 100644
+index 0000000..ce6bb2f
+--- /dev/null
++++ b/src/Organism/Cell/BodyCells/ParasiteCell.js
+@@ -0,0 +1,45 @@
++const CellStates=require("../CellStates");
++const BodyCell=require("./BodyCell");
++const Hyperparams=require("../../../Hyperparameters");
++const Neighbors=require("../../../Grid/Neighbors");
++
++class ParasiteCell extends BodyCell{
++    constructor(org,loc_col,loc_row){
++        super(CellStates.parasite,org,loc_col,loc_row);
++        this.cooldown=0;
++    }
++
++    performFunction(){
++        if(this.cooldown>0){
++            this.cooldown--;
++            return;
++        }
++        const env=this.org.env;
++        const c=this.getRealCol();
++        const r=this.getRealRow();
++        for(const [dc,dr] of Neighbors.adjacent){
++            if(this.stealFrom(env.grid_map.cellAt(c+dc,r+dr))){
++                this.cooldown=Hyperparams.parasiteCooldown;
++                return;
++            }
++        }
++    }
++
++    //returns true if any food was taken
++    stealFrom(cell){
++        if(cell==null||cell.owner==null||cell.owner==this.org||!cell.owner.living)
++            return false;
++        if(cell.state==CellStates.armor||cell.state==CellStates.killer)
++            return false;
++        const victim=cell.owner;
++        //rounded up, so a victim holding 1 food can still be robbed
++        const amount=Math.ceil(victim.food_collected*Hyperparams.parasiteStealPercent/100);
++        if(amount<=0)
++            return false;
++        victim.food_collected-=amount;
++        this.org.food_collected+=amount;
++        return true;
++    }
++}
++
++module.exports=ParasiteCell;
+diff --git a/src/Organism/Cell/CellStates.js b/src/Organism/Cell/CellStates.js
+index 24b880a..a6ade6a 100644
+--- a/src/Organism/Cell/CellStates.js
++++ b/src/Organism/Cell/CellStates.js
+@@ -86,6 +86,18 @@ class Scavenger extends CellState {
+     }
+ }
+ 
++class Parasite extends CellState {
++    constructor() {
++        super('parasite');
++    }
++}
++
++class Kamikaze extends CellState {
++    constructor() {
++        super('kamikaze');
++    }
++}
++
+ const CellStates = {
+     empty: new Empty(),
+     food: new Food(),
+@@ -98,9 +110,11 @@ const CellStates = {
+     eye: new Eye(),
+     healer:new Healer(),
+     scavenger:new Scavenger(),
++    parasite:new Parasite(),
++    kamikaze:new Kamikaze(),
+     defineLists() {
+-        this.all = [this.empty, this.food, this.wall, this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger]
+-        this.living = [this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger];
++        this.all = [this.empty, this.food, this.wall, this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger, this.parasite, this.kamikaze]
++        this.living = [this.mouth, this.producer, this.mover, this.killer, this.armor, this.eye, this.healer, this.scavenger, this.parasite, this.kamikaze];
+     },
+     getRandomName: function() {
+         return this.all[Math.floor(Math.random() * this.all.length)].name;
+diff --git a/src/Organism/Organism.js b/src/Organism/Organism.js
+index b3178c6..445bcb7 100644
+--- a/src/Organism/Organism.js
++++ b/src/Organism/Organism.js
+@@ -259,13 +259,23 @@ class Organism {
+     }
+ 
+     die() {
++        if(!this.living) return;
++        //marked dead first so chain explosions can't kill it twice
++        this.living=false;
++        const others=this.anatomy.cells.filter(cell=>cell.state!=CellStates.kamikaze);
++        const can_explode=this.food_collected>=others.length;
+         for (var cell of this.anatomy.cells) {
+             var real_c = this.c + cell.rotatedCol(this.rotation);
+             var real_r = this.r + cell.rotatedRow(this.rotation);
+             this.env.changeCell(real_c, real_r, CellStates.food, null);
+         }
+         this.species.decreasePop();
+-        this.living = false;
++        if(can_explode){
++            for(const cell of this.anatomy.cells){
++                if(cell.state==CellStates.kamikaze)
++                    cell.explode();
++            }
++        }
+     }
+ 
+     updateGrid() {
+diff --git a/src/Organism/Perception/Brain.js b/src/Organism/Perception/Brain.js
+index 3c74cfa..81589ef 100644
+--- a/src/Organism/Perception/Brain.js
++++ b/src/Organism/Perception/Brain.js
+@@ -47,6 +47,8 @@ class Brain {
+         this.decisions[CellStates.eye.name] = Decision.getRandom();
+         this.decisions[CellStates.healer.name]=Decision.getRandom();
+         this.decisions[CellStates.scavenger.name]=Decision.getRandom();
++        this.decisions[CellStates.parasite.name]=Decision.getRandom();
++        this.decisions[CellStates.kamikaze.name]=Decision.getRandom();
+     }
+ 
+     observe(observation) {
+diff --git a/src/Rendering/ColorScheme.js b/src/Rendering/ColorScheme.js
+index b13a5e3..456d124 100644
+--- a/src/Rendering/ColorScheme.js
++++ b/src/Rendering/ColorScheme.js
+@@ -12,6 +12,8 @@ var color_scheme = {
+     "eye":"#B6C1EA",
+     "healer":"#FFFFFF",
+     "scavenger":"#A65A2E",
++    "parasite":"#B53DB5",
++    "kamikaze":"#8B0000",
+     "eye-slit": "#0E1318"
+ }
+ 

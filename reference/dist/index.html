@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>The Life Engine</title>
+<link rel="icon" href="./img/icon.png">
+<link rel="stylesheet" href="./css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css">
+<script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+</head>
+<body class="panel-open">
+<script src="./js/bundle.js"></script>
+
+<div id="env"><canvas id="env-canvas"></canvas></div>
+
+<aside class="control-panel">
+<div id="speed-controller">
+<div class="title-row"><img src="./img/title.png" alt="Life Engine"><button id="minimize" title="Hide panel (Q)"><i class="fa fa-minus-square"></i></button></div>
+<div class="row"><label for="slider" id="fps">Target FPS: 60</label><input id="slider" type="range" min="1" max="300" value="60"></div>
+<div class="button-bar">
+<button class="pause-button" title="Play/Pause (Space)"><i class="fa fa-pause"></i></button>
+<button class="headless" title="Toggle rendering (H)"><i class="fa fa-eye-slash"></i></button>
+<button class="reset-view" title="Reset view (A)"><i class="fa fa-video-camera"></i></button>
+<button id="reset-env" title="Restart with the default organism">Reset</button>
+<button id="clear-env" title="Remove all organisms">Clear</button>
+<button id="editor" title="Open the creature editor"><i class="fa fa-pen-ruler"></i> Editor</button>
+</div>
+<p id="fps-actual"></p>
+</div>
+
+<nav class="tabnav">
+<p class="tabnav-item open-tab" id="about">About</p>
+<p class="tabnav-item" id="brushes">Brushes</p>
+<p class="tabnav-item" id="world-controls">World</p>
+<p class="tabnav-item" id="hyperparameters">Evolution</p>
+<p class="tabnav-item" id="stats">Stats</p>
+</nav>
+
+<div id="tab-container">
+<div id="about" class="tab">
+<h3>The Life Engine</h3>
+<p>A virtual ecosystem where organisms reproduce, compete and evolve. Hover over a color to learn what the cell does.</p>
+<div id="cell-legend"><div class="cell-legend-type" id="mouth" title="Mouth: Eats adjacent food."></div><div class="cell-legend-type" id="producer" title="Producer: Produces adjacent food."></div><div class="cell-legend-type" id="mover" title="Mover: Allows for movement and rotation."></div><div class="cell-legend-type" id="killer" title="Killer: Harms organisms in adjacent cells."></div><div class="cell-legend-type" id="armor" title="Armor: Blocks killers and parasites. Wears down under drills."></div><div class="cell-legend-type" id="eye" title="Eye: Observes cells and decides movement. Click a placed eye to rotate it."></div><div class="cell-legend-type" id="healer" title="Healer: Slowly repairs damage."></div><div class="cell-legend-type" id="scavenger" title="Scavenger: Sometimes eats food 2 squares away."></div><div class="cell-legend-type" id="parasite" title="Parasite: Steals food from adjacent organisms."></div><div class="cell-legend-type" id="kamikaze" title="Kamikaze: Explodes on death if the organism holds enough food."></div><div class="cell-legend-type" id="transporter" title="Transporter: Shares food with adjacent organisms of the same species."></div><div class="cell-legend-type" id="drill" title="Drill: Wears down armor, then breaks."></div><div class="cell-legend-type" id="sticky" title="Sticky: Glues touching organisms together."></div><div class="cell-legend-type" id="regrower" title="Regrower: Spends food to regrow lost cells."></div><div class="cell-legend-type" id="food" title="Food: organisms eat it to reproduce."></div><div class="cell-legend-type" id="wall" title="Wall: blocks movement and reproduction."></div></div>
+<iframe id="video" src="https://www.youtube.com/embed/iSAKEnRfles"></iframe>
+<div class="icon-links">
+<a href="https://github.com/MaxRobinsonTheGreat/EvolutionSimulatorV2" title="View the code"><i class="fa-brands fa-github"></i></a>
+<a href="https://discord.gg/ZsrAAByEnr" title="Join the community"><i class="fa-brands fa-discord"></i></a>
+<a href="https://www.patreon.com/emergentgarden" title="Support the project"><i class="fa-brands fa-patreon"></i></a>
+</div>
+</div>
+
+<div id="brushes" class="tab">
+<details class="section" open><summary>Tools</summary><div class="body">
+<div class="tool-grid">
+<button class="edit-mode-btn tool food-drop selected" id="food-drop" title="Food (F)"><i class="fa fa-cutlery"></i><span>Food</span></button>
+<button class="edit-mode-btn tool wall-drop" id="wall-drop" title="Wall (D)"><i class="fa fa-th"></i><span>Wall</span></button>
+<button class="edit-mode-btn tool click-kill" id="click-kill" title="Kill (G)"><i class="fa fa-skull"></i><span>Kill</span></button>
+<button class="edit-mode-btn tool drag-view" id="drag-view" title="Drag (S)"><i class="fa fa-arrows"></i><span>Drag</span></button>
+</div>
+<p class="hint">Left click paints, right click erases.</p>
+</div></details>
+<details class="section" open><summary>Zone brushes</summary><div class="body">
+<div class="tool-grid">
+<button class="edit-mode-btn tool fertility-up" id="fertility-up" title="Fertility +"><i class="fa fa-leaf"></i><span>Fertility +</span></button>
+<button class="edit-mode-btn tool fertility-down" id="fertility-down" title="Fertility -"><i class="fa fa-leaf"></i><span>Fertility -</span></button>
+<button class="edit-mode-btn tool mutation-up" id="mutation-up" title="Mutation +"><i class="fa fa-dna"></i><span>Mutation +</span></button>
+<button class="edit-mode-btn tool mutation-down" id="mutation-down" title="Mutation -"><i class="fa fa-dna"></i><span>Mutation -</span></button>
+</div>
+<div class="row"><label for="zone-view">Map view</label><select id="zone-view"><option value="off">off</option><option value="fertility">fertility</option><option value="mutation">mutation</option></select></div>
+</div></details>
+<details class="section" open><summary>Brush settings</summary><div class="body">
+<div class="row"><label for="brush-shape">Shape</label><select id="brush-shape"><option value="square">square</option><option value="circle">circle</option></select></div>
+<div class="row"><label for="brush-slider">Size</label><input id="brush-slider" type="range" min="0" max="40" value="2"><output id="brush-slider-value">2</output></div>
+<div class="row"><label for="brush-intensity">Intensity %</label><input id="brush-intensity" type="range" min="1" max="100" value="100"><output id="brush-intensity-value">100</output></div>
+<p class="hint">Intensity is the share of covered squares affected per stroke. For zone brushes it sets the strength of each stroke.</p>
+</div></details>
+</div>
+
+<div id="world-controls" class="tab">
+<details class="section" open><summary>Grid</summary><div class="body">
+<div class="row" title=""><label for="cell-size">Cell size</label><input type="number" id="cell-size" min="1" max="100" step="1" value="5"></div>
+<div class="row" title=""><label for="fill-window">Fill window</label><input type="checkbox" id="fill-window" checked></div>
+<div class="col-row-input">
+<div class="row"><label for="col-input">Columns</label><input type="number" class="grid-size-in" id="col-input" min="1" value="100"></div>
+<div class="row"><label for="row-input">Rows</label><input type="number" class="grid-size-in" id="row-input" min="1" value="100"></div>
+</div>
+<button id="resize">Resize and reset</button>
+</div></details>
+<details class="section"><summary>Reset options</summary><div class="body">
+<div class="row" title=""><label for="auto-reset">Reset on total extinction</label><input type="checkbox" id="auto-reset" checked></div>
+<div class="row" title="Overrides reset on extinction"><label for="auto-pause">Pause on total extinction</label><input type="checkbox" id="auto-pause"></div>
+<p id="reset-count">Auto reset count: </p>
+<div class="row" title=""><label for="num-random-orgs">Random organisms</label><input type="number" id="num-random-orgs" min="1" step="1" value="100"></div>
+<button class="randomize-button reset-random">Reset with random organisms</button>
+</div></details>
+<details class="section" open><summary>Random seed</summary><div class="body">
+<p id="seed-current"></p>
+<div class="row" title="Whole number from 0 to 4294967295"><label for="sim-seed">Seed</label><input type="number" id="sim-seed" min="0" max="4294967295" step="1" value="0"></div>
+<button id="seed-apply">Use seed and reset</button><button id="seed-random">New random seed</button>
+<p class="hint">Same seed, settings, grid size and starting walls and maps give the same run, as long as you don't intervene. Reset and Clear restart the sequence.</p>
+</div></details>
+<details class="section"><summary>Walls</summary><div class="body">
+<button id="random-walls">Generate random walls</button><button id="clear-walls" title="Hotkey: B">Clear all walls</button>
+<div class="row" title=""><label for="clear-walls-reset">Clear walls on reset</label><input type="checkbox" id="clear-walls-reset"></div>
+<details class="section sub"><summary>Wall noise</summary><div class="body">
+<div class="noise-options" data-noise="walls"></div>
+</div></details>
+</div></details>
+<details class="section"><summary>Save and load</summary><div class="body">
+<div class="row"><label for="save-env-name">File name</label><input type="text" id="save-env-name" value="world"></div>
+<button id="save-env">Save world</button><button id="load-env">Load world</button>
+<div class="row" title=""><label for="override-controls">Load its evolution controls too</label><input type="checkbox" id="override-controls" checked></div>
+</div></details>
+</div>
+
+<div id="hyperparameters" class="tab">
+<div class="button-bar"><button id="reset-rules">Reset all controls</button><button id="save-controls">Save</button><button id="load-controls">Load</button></div><input id="upload-hyperparams" style="display:none" type="file">
+<details class="section"><summary>Cell rules</summary><div class="body">
+<details class="section sub"><summary>Interactions</summary><div class="body">
+<div class="row" title="Killers, parasites and drills spare their own species"><label for="kin-recognition">Kin recognition</label><input type="checkbox" id="kin-recognition"></div>
+<div class="row" title=""><label for="insta-kill">One touch kill</label><input type="checkbox" id="insta-kill"></div>
+<div class="row" title=""><label for="rot-enabled">Rotation enabled</label><input type="checkbox" id="rot-enabled" checked></div>
+</div></details>
+<details class="section sub"><summary>Producer</summary><div class="body">
+<div class="row" title=""><label for="food-prod-prob">Food probability %</label><input type="number" id="food-prod-prob" min="0" max="100" step="any" value="5"></div>
+<div class="row" title=""><label for="movers-produce">Movers can produce food</label><input type="checkbox" id="movers-produce"></div>
+</div></details>
+<details class="section sub"><summary>Mover</summary><div class="body">
+<div class="row" title=""><label for="extra-mover-cost">Extra reproduction cost</label><input type="number" id="extra-mover-cost" min="0" max="1000" step="1" value="0"></div>
+</div></details>
+<details class="section sub"><summary>Killer</summary><div class="body">
+<p class="hint">One touch kill is under Interactions.</p>
+</div></details>
+<details class="section sub"><summary>Armor</summary><div class="body">
+<div class="row" title="Drill damage an armor cell survives"><label for="armor-durability">Durability</label><input type="number" id="armor-durability" min="1" step="1" value="10"></div>
+</div></details>
+<details class="section sub"><summary>Drill</summary><div class="body">
+<div class="row" title=""><label for="drill-damage">Armor damage per hit</label><input type="number" id="drill-damage" min="0" step="1" value="2"></div>
+<div class="row" title=""><label for="drill-interval">Ticks between hits</label><input type="number" id="drill-interval" min="0" step="1" value="5"></div>
+<div class="row" title=""><label for="drill-break">Damage dealt before breaking</label><input type="number" id="drill-break" min="1" step="1" value="30"></div>
+</div></details>
+<details class="section sub"><summary>Sticky</summary><div class="body">
+<div class="row" title="0 disables gluing"><label for="glue-timeout">Glue lasts (ticks)</label><input type="number" id="glue-timeout" min="0" step="1" value="100"></div>
+<div class="row" title=""><label for="glue-cooldown">Wait before regluing (ticks)</label><input type="number" id="glue-cooldown" min="0" step="1" value="50"></div>
+</div></details>
+<details class="section sub"><summary>Regrower</summary><div class="body">
+<div class="row" title=""><label for="regrow-cost">Food per regrown cell</label><input type="number" id="regrow-cost" min="0" step="1" value="2"></div>
+<div class="row" title=""><label for="regrow-interval">Ticks between regrowths</label><input type="number" id="regrow-interval" min="0" step="1" value="20"></div>
+</div></details>
+<details class="section sub"><summary>Healer</summary><div class="body">
+<div class="row" title=""><label for="heal-prob">Heal probability %</label><input type="number" id="heal-prob" min="0" max="100" step="any" value="5"></div>
+</div></details>
+<details class="section sub"><summary>Scavenger</summary><div class="body">
+<div class="row" title=""><label for="scavenge-prob">Scavenge probability %</label><input type="number" id="scavenge-prob" min="0" max="100" step="any" value="10"></div>
+</div></details>
+<details class="section sub"><summary>Parasite</summary><div class="body">
+<div class="row" title=""><label for="parasite-steal">Steal percentage</label><input type="number" id="parasite-steal" min="0" max="100" step="1" value="50"></div>
+<div class="row" title=""><label for="parasite-cooldown">Timeout (ticks)</label><input type="number" id="parasite-cooldown" min="0" step="1" value="20"></div>
+</div></details>
+<details class="section sub"><summary>Kamikaze</summary><div class="body">
+<div class="row" title=""><label for="kamikaze-range">Blast range</label><input type="number" id="kamikaze-range" min="0" max="20" step="1" value="2"></div>
+</div></details>
+<details class="section sub"><summary>Transporter</summary><div class="body">
+<div class="row" title=""><label for="transport-gap">Age gap (ticks)</label><input type="number" id="transport-gap" min="0" step="1" value="40"></div>
+<div class="row" title=""><label for="transport-amount">Food per transfer</label><input type="number" id="transport-amount" min="1" step="1" value="1"></div>
+</div></details>
+</div></details>
+<details class="section"><summary>Sensing ranges</summary><div class="body">
+<div class="row" title=""><label for="look-range">Eye look range</label><input type="number" id="look-range" min="1" max="200" step="1" value="20"></div>
+<div class="row" title=""><label for="see-through-self">Eyes see through own cells</label><input type="checkbox" id="see-through-self"></div>
+<p class="hint">Blast range is under Cell rules, Kamikaze.</p>
+</div></details>
+<details class="section"><summary>Life and reproduction</summary><div class="body">
+<div class="row" title=""><label for="lifespan-multiplier">Lifespan per cell (ticks)</label><input type="number" id="lifespan-multiplier" min="1" max="10000" step="1" value="100"></div>
+<div class="row" title=""><label for="org-limit">Maximum organisms (-1: none)</label><input type="number" id="org-limit" min="-1" step="1" value="-1"></div>
+<div class="row" title=""><label for="food-blocks">Food blocks reproduction</label><input type="checkbox" id="food-blocks" checked></div>
+</div></details>
+<details class="section"><summary>Food</summary><div class="body">
+<div class="row" title=""><label for="food-drop-rate">Auto food drop rate</label><input type="number" id="food-drop-rate" min="0" max="1000" step="any" value="0"></div>
+<div class="row" title=""><label for="food-rot-enabled">Food rot</label><input type="checkbox" id="food-rot-enabled"></div>
+<div class="row" title=""><label for="food-rot-ticks">Food lasts (ticks)</label><input type="number" id="food-rot-ticks" min="1" step="1" value="500"></div>
+</div></details>
+<details class="section"><summary>Seasons</summary><div class="body">
+<div class="row" title="Each season multiplies the producer food probability"><label for="seasons-enabled">Enable seasons</label><input type="checkbox" id="seasons-enabled"></div>
+<div id="season-list"></div>
+<button id="add-season">Add season</button>
+<div id="season-status"></div>
+</div></details>
+<details class="section"><summary>Mutation</summary><div class="body">
+<div class="row" title=""><label for="evolved-mutation">Use evolved mutation rate</label><input type="checkbox" id="evolved-mutation" checked></div>
+<div class="global-mutation-container">
+<div class="row" title=""><label for="global-mutation">Global mutation rate %</label><input type="number" id="global-mutation" class="global-mutation-in" min="0" max="100" step="1" value="5"></div>
+</div>
+<h4>Mutation type probabilities</h4>
+<div class="row" title=""><label for="add-prob">Add cell</label><input type="number" id="add-prob" class="mut-prob" min="0" max="100" step="1" value="33"></div>
+<div class="row" title=""><label for="change-prob">Change cell</label><input type="number" id="change-prob" class="mut-prob" min="0" max="100" step="1" value="33"></div>
+<div class="row" title=""><label for="remove-prob">Remove cell</label><input type="number" id="remove-prob" class="mut-prob" min="0" max="100" step="1" value="33"></div>
+</div></details>
+<details class="section"><summary>Fertility map</summary><div class="body">
+<div class="row" title=""><label for="fertility-enabled">Enable fertility zones</label><input type="checkbox" id="fertility-enabled"></div>
+<p class="hint">Multiplies producer food probability at the target square (0x to 3x). Paint with the zone brushes.</p>
+<button id="fertility-randomize">Generate from noise</button><button id="fertility-flatten">Flatten</button>
+<div class="noise-options" data-noise="fertility"></div>
+</div></details>
+<details class="section"><summary>Mutation map</summary><div class="body">
+<div class="row" title=""><label for="mutation-zones-enabled">Enable mutation zones</label><input type="checkbox" id="mutation-zones-enabled"></div>
+<p class="hint">Multiplies mutation chance at the parent's position (0x to 5x).</p>
+<button id="mutation-randomize">Generate from noise</button><button id="mutation-flatten">Flatten</button>
+<div class="noise-options" data-noise="mutation"></div>
+</div></details>
+<details class="section"><summary>Meteors</summary><div class="body">
+<div class="row" title=""><label for="meteor-enabled">Random meteors</label><input type="checkbox" id="meteor-enabled"></div>
+<div class="row" title=""><label for="meteor-interval">Average ticks between</label><input type="number" id="meteor-interval" min="1" step="1" value="2000"></div>
+<div class="row" title=""><label for="meteor-radius">Radius</label><input type="number" id="meteor-radius" min="0" step="1" value="10"></div>
+<button id="meteor-now">Strike now</button>
+</div></details>
+</div>
+
+<div id="stats" class="tab">
+<p id="org-count">Total Population: </p>
+<p id="species-count">Number of Species: </p>
+<p id="top-species">Most Populous Species: </p>
+<p id="largest-org">Largest Organism Ever: </p>
+<p id="avg-mut">Average Mutation Rate: </p>
+<div class="row"><label for="chart-option">Chart</label><select name="chart-option" id="chart-option">
+<option value="population">Population</option><option value="species">Species</option><option value="structure">Organism Structure</option><option value="mut-rate">Mutation Rate</option></select></div>
+<p id="chart-note"></p>
+<div id="chartContainer"></div>
+<div id="cell-table"></div>
+</div>
+</div>
+<a id="download-el" style="display:none;"></a>
+</aside>
+
+<section id="editor-window">
+<header><span><i class="fa fa-pen-ruler"></i> Creature Editor</span><button id="editor-collapse" title="Collapse"><i class="fa fa-chevron-up"></i></button><button id="editor-close" title="Close"><i class="fa fa-times"></i></button></header>
+<div id="editor-panel">
+<div class="editor-buttons">
+<button class="edit-mode-btn select" id="select" title="Select organism from world (Z)"><i class="fa-regular fa-hand-pointer"></i></button>
+<button class="edit-mode-btn edit" id="edit" title="Edit organism (X)"><i class="fa fa-pen-to-square"></i></button>
+<button class="edit-mode-btn drop-org" id="drop-org" title="Drop organism in world (C)"><i class="fa fa-plus"></i></button>
+<button id="save-org" title="Save organism"><i class="fa fa-save"></i></button>
+<button id="load-org" title="Load organism"><i class="fa fa-upload"></i></button>
+<button id="reset-with-editor-org" title="Reset world with this organism"><i class="fa fa-seedling"></i></button>
+<button id="clear-editor">Clear</button>
+<button class="randomize-button" id="generate-random" title="Randomize organism"><i class="fa fa-random"></i></button>
+<b id="unnatural-org-warning" title="Unnatural organism: it has overlapping cells or genetic changes that cannot evolve naturally"><i class="fa fa-biohazard"></i></b>
+</div>
+<div class="editor-view-controls">
+<label for="editor-grid-size" title="Width and height of the drawing grid">Grid</label><input type="number" id="editor-grid-size" min="5" max="201" step="2" value="15">
+<label for="editor-zoom">Zoom</label><input type="range" id="editor-zoom" min="3" max="30" value="13">
+<button id="editor-fit" title="Zoom so the whole grid is visible">Fit</button>
+</div>
+<div id="cell-selections"><div class="cell-type" id="mouth" title="Mouth: Eats adjacent food."></div><div class="cell-type" id="producer" title="Producer: Produces adjacent food."></div><div class="cell-type" id="mover" title="Mover: Allows for movement and rotation."></div><div class="cell-type" id="killer" title="Killer: Harms organisms in adjacent cells."></div><div class="cell-type" id="armor" title="Armor: Blocks killers and parasites. Wears down under drills."></div><div class="cell-type" id="eye" title="Eye: Observes cells and decides movement. Click a placed eye to rotate it."></div><div class="cell-type" id="healer" title="Healer: Slowly repairs damage."></div><div class="cell-type" id="scavenger" title="Scavenger: Sometimes eats food 2 squares away."></div><div class="cell-type" id="parasite" title="Parasite: Steals food from adjacent organisms."></div><div class="cell-type" id="kamikaze" title="Kamikaze: Explodes on death if the organism holds enough food."></div><div class="cell-type" id="transporter" title="Transporter: Shares food with adjacent organisms of the same species."></div><div class="cell-type" id="drill" title="Drill: Wears down armor, then breaks."></div><div class="cell-type" id="sticky" title="Sticky: Glues touching organisms together."></div><div class="cell-type" id="regrower" title="Regrower: Spends food to regrow lost cells."></div></div>
+<div id="editor-env"><canvas id="editor-canvas"></canvas></div>
+<div id="editor-info">
+<div id="organism-details" style="display:none;">
+<h4>Organism details</h4>
+<p class="species-name">Species Name: </p>
+<p class="cell-count">Cell count: </p>
+<p id="move-range">Move Range: </p>
+<p id="mutation-rate">Mutation Rate: </p>
+<div class="brain-details"><h4>Brain</h4><p class="chase-types">Move Towards: food</p><p class="retreat-types">Move Away From: killer</p></div>
+</div>
+<div id="edit-organism-details" style="display:none;">
+<div id="species-name-cont" class="row"><label for="species-name-edit">Species name</label><input type="text" id="species-name-edit"></div>
+<p class="cell-count">Cell count: </p>
+<div id="move-range-cont"><label for="move-range-edit" title="Cells moved before randomly changing direction. Brain decisions override it.">Move range</label> <input type="number" id="move-range-edit" min="1" max="100" value="3"></div>
+<div id="mutation-rate-cont"><label for="mutation-rate-edit" title="Probability that offspring will mutate">Mutation rate</label> <input type="number" id="mutation-rate-edit" min="1" max="100" value="3"></div>
+<div class="brain-details"><h4>Brain</h4>
+<div class="row"><label for="observation-type-edit">Observation</label><select id="observation-type-edit"><option value="food">food</option><option value="mouth">mouth</option><option value="producer">producer</option><option value="mover">mover</option><option value="killer">killer</option><option value="armor">armor</option><option value="eye">eye</option><option value="healer">healer</option><option value="scavenger">scavenger</option><option value="parasite">parasite</option><option value="kamikaze">kamikaze</option><option value="transporter">transporter</option><option value="drill">drill</option><option value="sticky">sticky</option><option value="regrower">regrower</option></select></div>
+<div class="row"><label for="reaction-edit">Reaction</label><select id="reaction-edit"><option value="0">ignore</option><option value="1">move away</option><option value="2">move towards</option></select></div>
+<p class="chase-types">Move Towards: food</p><p class="retreat-types">Move Away From: killer</p></div>
+</div>
+</div>
+</div>
+</section>
+
+<div class="load-panel">
+<div class="load-panel-title"><button id="close-load-btn"><i class="fa fa-times"></i></button><h1>Community Creations</h1></div><br>
+<div class="all-list-container">
+<div class="list-title-container"><h2>🌍Worlds</h2><div id="worlds-list-container" class="list-container"><ul id="worlds-list"></ul></div></div>
+<div class="list-title-container"><h2>🦠Organisms</h2><div id="organisms-list-container" class="list-container"><ul id="organisms-list"></ul></div></div>
+<div class="list-title-container"><h2>🔧Mods</h2><div id="mods-list-container" class="list-container"><ul id="mods-list"></ul></div></div>
+</div>
+<input id="upload-json" style="display:none;" type="file">
+</div>
+<div class="community-section"><button id="community-creations-btn" title="See worlds and organisms made by the community">Community Creations <i class="fa fa-users"></i></button></div>
+<div class="hot-controls">
+<button class="reset-view" title="Reset view (A)"><i class="fa fa-video-camera"></i></button>
+<button class="edit-mode-btn drag-view" id="drag-view" title="Drag view (S)"><i class="fa fa-arrows"></i></button><button class="edit-mode-btn wall-drop" id="wall-drop" title="Wall (D)"><i class="fa fa-th"></i></button><button class="edit-mode-btn food-drop selected" id="food-drop" title="Food (F)"><i class="fa fa-cutlery"></i></button><button class="edit-mode-btn click-kill" id="click-kill" title="Kill (G)"><i class="fa fa-skull"></i></button>
+<button class="headless" title="Toggle rendering (H)"><i class="fa fa-eye-slash"></i></button>
+<button class="pause-button" title="Play/Pause (Space)"><i class="fa fa-pause"></i></button>
+</div>
+<div id="headless-notification"><i class="fa fa-eye-slash"></i></div>
+<div id="maximize-hot-control" class="hot-controls"><button id="maximize" title="Show panel (Q)"><i class="fa fa-plus-square"></i></button></div>
+</body>
+</html>
