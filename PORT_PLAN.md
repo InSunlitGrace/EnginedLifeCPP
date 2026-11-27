@@ -54,9 +54,9 @@ Pin every dependency to a release tag (FetchContent).
 ## Parts
 Size: S fits a short session, M a normal one, L should be split if tokens are low.
 
-- [ ] **0. Baseline (S)**: CMake skeleton; Node headless script that runs a seed, prints hashes and ticks/s. Record numbers for small and large grids.
+- [x] **0. Baseline (S)**: CMake skeleton; Node headless script that runs a seed, prints hashes and ticks/s. Record numbers for small and large grids.
       JS: WorldEnvironment, Random, Hyperparameters. Done: baseline numbers saved.
-- [ ] **1. Foundations (S)**: RNG, grid, cell enum, directions, neighbours, hyperparameters struct.
+- [x] **1. Foundations (S)**: RNG, grid, cell enum, directions, neighbours, hyperparameters struct.
       JS: Grid/, CellStates, Directions, Random. Done: unit tests; RNG matches JS.
 - [ ] **2. Life cycle (L)**: organism pool, anatomy, mouth, producer, mover, eating, movement, rotation, reproduction, death, species counts.
       JS: Organism, Anatomy, BodyCell, RandomOrganismGenerator. Done: parity with mutation set to 0.
@@ -76,10 +76,24 @@ Size: S fits a short session, M a normal one, L should be split if tokens are lo
 - [ ] **14. Optional**: many headless worlds in parallel (easy, one per core). Multithreading one world (checkerboard chunks) is hard, changes results, and is worth it only if profiling shows a need.
 
 ## Setup on Ubuntu
-    sudo apt install build-essential cmake ninja-build git libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
+    sudo apt install build-essential cmake ninja-build git libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev doctest-dev nodejs
 
 ## Code style
 No spaces around = + - * / in code.
 
 ## Status
 (notes per finished part: commit, deviations, benchmark numbers)
+
+### Parts 0 and 1
+- Build: `cmake --preset release`, `cmake --build --preset release`, `ctest --preset release`. `debug` adds sanitizers. All tests pass in both.
+- JavaScript tools: `tools/jsref/run.js` (hashes, speed), `bench.sh`, `foundations.js`. They load `reference/src` directly and need no npm packages. Baseline: `docs/baseline.md`.
+- C++: `src/core/` has rng, cells (with restrictable type lists), directions (body rotation too), neighbors, hyperparams, grid, hash. `le_cli` only has the `foundations` command so far.
+- Grid: `index(c,r)` includes the border; types may be read one step outside. Zones are `uint16_t` hundredths (the JavaScript rounds them to 2 decimals), exposed as `double`.
+- Grid hash and every JavaScript iteration go column by column (c outer, r inner), although C++ storage is row by row.
+- Neighbor settings are a `NeighborSet` enum. Save loading (Part 7) must map the JavaScript arrays to it.
+
+### Notes for Part 2
+- Add a `run` command to `le_cli` with the same options and output line as `run.js`. `organismHash` in `tools/jsref/common.js` defines the field order. Add a parity test with `--no-mutation`.
+- Creating a species draws one random number (its name), including in OriginOfLife.
+- Keep organisms in update order. Newborns are first updated on the next tick (checked in Node). An organism killed after its turn stays in the list, and counts toward maxOrganisms, until the next tick removes it.
+- Food age tracking (Part 6) needs insertion order; it is not in the grid yet.

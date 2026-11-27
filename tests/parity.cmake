@@ -1,0 +1,10 @@
+# runs the C++ and JavaScript versions and requires identical output
+execute_process(COMMAND ${CLI} foundations ${SEED} OUTPUT_FILE ${OUT}.cpp.txt RESULT_VARIABLE cpp_result)
+execute_process(COMMAND ${NODE} ${SCRIPT} ${SEED} OUTPUT_FILE ${OUT}.js.txt RESULT_VARIABLE js_result)
+if(NOT cpp_result EQUAL 0 OR NOT js_result EQUAL 0)
+    message(FATAL_ERROR "run failed: C++ ${cpp_result}, JavaScript ${js_result}")
+endif()
+execute_process(COMMAND ${CMAKE_COMMAND} -E compare_files ${OUT}.cpp.txt ${OUT}.js.txt RESULT_VARIABLE different)
+if(different)
+    message(FATAL_ERROR "output differs, compare ${OUT}.cpp.txt with ${OUT}.js.txt")
+endif()
